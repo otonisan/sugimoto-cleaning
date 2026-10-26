@@ -35,7 +35,17 @@ function spc_is_valid_line_url( string $url ): bool {
 }
 
 /**
+ * GTMコンテナIDとして許可できるか（GTM- ＋英大文字・数字4〜10文字）。
+ */
+function spc_is_valid_gtm_id( string $id ): bool {
+	return 1 === preg_match( '/^GTM-[A-Z0-9]{4,10}$/', $id );
+}
+
+/**
  * 保存前の入力値を検証・整形する。
+ *
+ * LINE追加URL・GTMコンテナIDは、形式が違う入力ならエラーを表示し、保存済みの値（なければ初期値）のまま変えない。
+ * 空欄はエラーにせず、LINE追加URLは仮URLに、GTMコンテナIDは未設定に戻す。
  */
 function spc_settings_sanitize( $input ): array {
 	$input = is_array( $input ) ? $input : array();
@@ -49,10 +59,18 @@ function spc_settings_sanitize( $input ): array {
 		$out['brand_name'] = '' !== $name ? $name : $defaults['brand_name'];
 	}
 
-	// LINE URL は https の lin.ee / line.me のみ許可。
+	// LINE URL は https の lin.ee / line.me のみ許可。形式違いは保存済みの値のまま（spc_line_url() は保存値を再検証する）。
 	$line = isset( $input['line_url'] ) ? trim( (string) $input['line_url'] ) : '';
 	if ( spc_is_valid_line_url( $line ) ) {
 		$out['line_url'] = esc_url_raw( $line, array( 'https' ) );
+	} elseif ( '' !== $line ) {
+		$out['line_url'] = spc_line_url();
+		add_settings_error(
+			'spc_settings',
+			'spc_invalid_line_url',
+			__( 'LINE追加URLの形式が正しくないため、変更を保存しませんでした。https://lin.ee/… または https://line.me/… の形式で入力してください。', 'spc' ),
+			'error'
+		);
 	}
 
 	// QR画像は実在する画像添付のみ。
@@ -62,10 +80,19 @@ function spc_settings_sanitize( $input ): array {
 	}
 	$out['line_qr_id'] = $qr_id;
 
-	// GTM ID は大文字化して形式一致のみ。
+	// GTM ID は大文字化して形式一致のみ。形式違いは保存済みの値のまま。
 	$gtm = isset( $input['gtm_id'] ) ? strtoupper( trim( (string) $input['gtm_id'] ) ) : '';
-	if ( preg_match( '/^GTM-[A-Z0-9]{4,10}$/', $gtm ) ) {
+	if ( spc_is_valid_gtm_id( $gtm ) ) {
 		$out['gtm_id'] = $gtm;
+	} elseif ( '' !== $gtm ) {
+		$saved_gtm     = (string) spc_get_setting( 'gtm_id' );
+		$out['gtm_id'] = spc_is_valid_gtm_id( $saved_gtm ) ? $saved_gtm : $defaults['gtm_id'];
+		add_settings_error(
+			'spc_settings',
+			'spc_invalid_gtm_id',
+			__( 'GTMコンテナIDの形式が正しくないため、変更を保存しませんでした。GTM-から始まるIDを入力してください。', 'spc' ),
+			'error'
+		);
 	}
 
 	if ( isset( $input['hero_sp_writing'] ) && in_array( $input['hero_sp_writing'], array( 'vertical', 'horizontal' ), true ) ) {
@@ -174,7 +201,7 @@ function spc_render_settings_field( array $args ): void {
 			break;
 		case 'line_url':
 			printf( '<input type="url" class="large-text" id="%s" name="%s" value="%s" placeholder="https://lin.ee/...">', esc_attr( $id ), esc_attr( $name ), esc_attr( (string) $value ) );
-			$help = __( 'LINE公式アカウントの友だち追加URL（https://lin.ee/… または https://line.me/…）を貼り付けてください。空欄や形式が違う場合は仮のURLに戻ります。', 'spc' );
+			$help = __( 'LINE公式アカウントの友だち追加URL（https://lin.ee/… または https://line.me/…）を貼り付けてください。空欄にして保存すると仮のURLに戻ります。形式が違う場合はエラーを表示し、それまでのURLのまま変更しません。', 'spc' );
 			break;
 		case 'line_qr_id':
 			$image = $value ? wp_get_attachment_image( (int) $value, 'medium', false, array( 'class' => 'spc-media-img' ) ) : '';
@@ -194,7 +221,7 @@ function spc_render_settings_field( array $args ): void {
 			break;
 		case 'gtm_id':
 			printf( '<input type="text" class="regular-text" id="%s" name="%s" value="%s" placeholder="GTM-XXXXXX">', esc_attr( $id ), esc_attr( $name ), esc_attr( (string) $value ) );
-			$help = __( 'Googleタグマネージャーのコンテナ ID（GTM-から始まる文字列）。未設定の間は計測タグを出力しません。', 'spc' );
+			$help = __( 'Googleタグマネージャーのコンテナ ID（GTM-から始まる文字列）。未設定の間は計測タグを出力しません。空欄にして保存すると未設定に戻ります。形式が違う場合はエラーを表示し、それまでの値のまま変更しません。', 'spc' );
 			break;
 		case 'hero_sp_writing':
 			$options = array(
