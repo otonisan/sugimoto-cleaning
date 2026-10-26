@@ -12,13 +12,37 @@ class Test_Settings extends WP_UnitTestCase {
 	}
 
 	public function invalid_line_urls() {
-		return array( array( '' ), array( 'http://lin.ee/abc' ), array( 'https://evil.example/abc' ), array( 'javascript:alert(1)' ) );
+		return array( array( '' ), array( 'http://lin.ee/abc' ), array( 'https://evil.example/abc' ), array( 'javascript:alert(1)' ),
+			array( 'https://lin.ee.evil.com/x' ), array( 'https://lin.ee@evil.com/x' ), array( 'https://evil.com\@lin.ee' ), array( 'https://evil.com/?u=lin.ee' ), array( array( 'x' ) ) );
 	}
 
 	public function test_valid_line_urls_kept() {
 		foreach ( array( 'https://lin.ee/AbC123', 'https://line.me/R/ti/p/@abc' ) as $url ) {
 			$this->assertSame( $url, spc_settings_sanitize( array( 'line_url' => $url ) )['line_url'] );
 		}
+	}
+
+	public function test_host_is_case_insensitive() {
+		$this->assertSame( 'https://LIN.EE/abc', spc_settings_sanitize( array( 'line_url' => 'https://LIN.EE/abc' ) )['line_url'] );
+		$this->assertSame( SPC_LINE_URL_PLACEHOLDER, spc_settings_sanitize( array( 'line_url' => 'HTTP://lin.ee/abc' ) )['line_url'] );
+	}
+
+	public function test_non_scalar_input_does_not_raise_notices() {
+		$out = spc_settings_sanitize( array( 'brand_name' => array( 'a' ), 'gtm_id' => array( 'a' ), 'reply_time_note' => array( 'a' ), 'line_qr_id' => array( 1 ) ) );
+		$defaults = spc_settings_defaults();
+		$this->assertSame( $defaults['brand_name'], $out['brand_name'] );
+		$this->assertSame( $defaults['reply_time_note'], $out['reply_time_note'] );
+		$this->assertSame( '', $out['gtm_id'] );
+		$this->assertSame( 0, $out['line_qr_id'] );
+	}
+
+	public function test_line_url_revalidated_on_read() {
+		update_option( 'spc_settings', array( 'line_url' => 'https://evil.example/' ) );
+		$this->assertSame( SPC_LINE_URL_PLACEHOLDER, spc_line_url() );
+		update_option( 'spc_settings', array( 'line_url' => '' ) );
+		$this->assertSame( SPC_LINE_URL_PLACEHOLDER, spc_line_url() );
+		update_option( 'spc_settings', array( 'line_url' => 'https://lin.ee/ok' ) );
+		$this->assertSame( 'https://lin.ee/ok', spc_line_url() );
 	}
 
 	public function test_gtm_id_format() {

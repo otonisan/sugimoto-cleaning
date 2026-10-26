@@ -23,10 +23,24 @@ function spc_settings_defaults(): array {
 }
 
 /**
+ * LINE追加URLとして許可できるか（https かつ lin.ee / line.me のホストのみ）。
+ */
+function spc_is_valid_line_url( string $url ): bool {
+	$url = trim( $url );
+	if ( 0 !== strpos( $url, 'https://' ) || esc_url_raw( $url, array( 'https' ) ) !== $url ) {
+		return false;
+	}
+	$host = wp_parse_url( $url, PHP_URL_HOST );
+	return is_string( $host ) && in_array( strtolower( $host ), array( 'lin.ee', 'line.me' ), true );
+}
+
+/**
  * 保存前の入力値を検証・整形する。
  */
 function spc_settings_sanitize( $input ): array {
-	$input    = is_array( $input ) ? $input : array();
+	$input = is_array( $input ) ? $input : array();
+	// 配列などスカラー以外の値は無かったことにして初期値へ戻す。
+	$input    = array_filter( $input, 'is_scalar' );
 	$defaults = spc_settings_defaults();
 	$out      = $defaults;
 
@@ -37,12 +51,8 @@ function spc_settings_sanitize( $input ): array {
 
 	// LINE URL は https の lin.ee / line.me のみ許可。
 	$line = isset( $input['line_url'] ) ? trim( (string) $input['line_url'] ) : '';
-	$host = wp_parse_url( $line, PHP_URL_HOST );
-	if ( 0 === strpos( $line, 'https://' ) && in_array( $host, array( 'lin.ee', 'line.me' ), true ) ) {
-		$line = esc_url_raw( $line, array( 'https' ) );
-		if ( '' !== $line ) {
-			$out['line_url'] = $line;
-		}
+	if ( spc_is_valid_line_url( $line ) ) {
+		$out['line_url'] = esc_url_raw( $line, array( 'https' ) );
 	}
 
 	// QR画像は実在する画像添付のみ。
@@ -89,7 +99,9 @@ function spc_get_setting( string $key ) {
  * サイト全体で使うLINE追加URL（唯一の取得口）。
  */
 function spc_line_url(): string {
-	return (string) spc_get_setting( 'line_url' );
+	$url = (string) spc_get_setting( 'line_url' );
+	// DB直接更新などで不正な値が入っても、CTAのリンク先は必ずLINEにする。
+	return spc_is_valid_line_url( $url ) ? $url : SPC_LINE_URL_PLACEHOLDER;
 }
 
 /**
