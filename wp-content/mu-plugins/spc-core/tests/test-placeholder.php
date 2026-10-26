@@ -200,11 +200,46 @@ class Test_Placeholder extends WP_UnitTestCase {
 		$this->assertStringContainsString( 'post=' . $page, $report[0]['edit_url'] );
 	}
 
-	public function test_publish_guard_does_not_touch_pages() {
+	public function test_publish_guard_reverts_placeholder_pages_too() {
 		$this->production();
 		$id = self::factory()->post->create( array( 'post_type' => 'page', 'post_status' => 'publish' ) );
 		update_post_meta( $id, '_spc_is_placeholder', '1' );
+		$this->assertSame( 'draft', get_post_status( $id ) );
+
+		wp_update_post( array( 'ID' => $id, 'post_status' => 'publish' ) );
+		$this->assertSame( 'draft', get_post_status( $id ) );
+
+		delete_post_meta( $id, '_spc_is_placeholder' );
+		wp_update_post( array( 'ID' => $id, 'post_status' => 'publish' ) );
 		$this->assertSame( 'publish', get_post_status( $id ) );
+	}
+
+	public function test_production_placeholder_page_is_404_and_plain_page_is_not() {
+		add_filter( 'spc_is_production', '__return_false' );
+		$fake = self::factory()->post->create( array( 'post_type' => 'page', 'post_name' => 'price', 'post_status' => 'publish' ) );
+		update_post_meta( $fake, '_spc_is_placeholder', '1' );
+		$real = self::factory()->post->create( array( 'post_type' => 'page', 'post_name' => 'about', 'post_status' => 'publish' ) );
+		$this->go_to( get_permalink( $fake ) );
+		$this->assertTrue( is_page( $fake ) );
+
+		remove_all_filters( 'spc_is_production' );
+		$this->production();
+		$this->go_to( get_permalink( $fake ) );
+		$this->assertTrue( is_404() );
+		$this->go_to( get_permalink( $real ) );
+		$this->assertTrue( is_page( $real ) );
+		$this->assertSame( array( $real ), wp_list_pluck( $GLOBALS['wp_query']->posts, 'ID' ) );
+	}
+
+	public function test_production_page_guard_leaves_admin_alone() {
+		$this->production();
+		set_current_screen( 'edit-page' );
+		$q = new WP_Query();
+		$q->parse_query( array( 'post_type' => 'page' ) );
+		$GLOBALS['wp_the_query'] = $q; // 管理画面のメインクエリとして扱う
+		spc_exclude_placeholder_from_main_query( $q );
+		$this->assertEmpty( $q->get( 'meta_query' ) );
+		set_current_screen( 'front' );
 	}
 
 	private function placeholder_case( string $title ): int {

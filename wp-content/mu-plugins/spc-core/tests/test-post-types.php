@@ -83,4 +83,16 @@ class Test_PostTypes extends WP_UnitTestCase {
 		do_action( 'manage_spc_faq_posts_custom_column', 'spc_placeholder', $plain );
 		$this->assertSame( '', ob_get_clean() );
 	}
+
+	public function test_placeholder_column_on_pages_list() {
+		$flagged = self::factory()->post->create( array( 'post_type' => 'page' ) );
+		update_post_meta( $flagged, '_spc_is_placeholder', '1' );
+
+		$cols = apply_filters( 'manage_page_posts_columns', array( 'title' => 'Title' ) );
+		$this->assertSame( array( 'title' => 'Title', 'spc_placeholder' => '仮' ), $cols );
+
+		ob_start();
+		do_action( 'manage_page_posts_custom_column', 'spc_placeholder', $flagged );
+		$this->assertSame( '仮', ob_get_clean() );
+	}
 }

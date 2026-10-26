@@ -31,6 +31,83 @@ class Test_MetaFields extends WP_UnitTestCase {
 		$this->assertSame( array(), spc_field_definitions( 'post' ) );
 	}
 
+	public function test_page_has_only_the_placeholder_checkbox() {
+		$defs = spc_field_definitions( 'page' );
+		$this->assertSame( array( '_spc_is_placeholder' ), array_keys( $defs ) );
+		$this->assertSame( spc_field_definitions( 'spc_case' )['_spc_is_placeholder'], $defs['_spc_is_placeholder'] );
+		$this->assertContains( 'page', spc_placeholder_post_types() );
+	}
+
+	public function test_page_placeholder_meta_is_registered_and_sanitized() {
+		spc_register_meta_fields(); // 前のテストの後始末で登録表が空になるため再登録
+		$keys = get_registered_meta_keys( 'post', 'page' );
+		$this->assertArrayHasKey( '_spc_is_placeholder', $keys );
+		$this->assertFalse( $keys['_spc_is_placeholder']['show_in_rest'] );
+		$id = $this->post( 'page' );
+		update_post_meta( $id, '_spc_is_placeholder', 'yes' );
+		$this->assertSame( '', get_post_meta( $id, '_spc_is_placeholder', true ) );
+		update_post_meta( $id, '_spc_is_placeholder', '1' );
+		$this->assertSame( '1', get_post_meta( $id, '_spc_is_placeholder', true ) );
+
+		// 権限：編集できないユーザーはメタを書けない（REST・カスタムフィールド経由の保険）。
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'subscriber' ) ) );
+		$this->assertFalse( current_user_can( 'edit_post_meta', $id, '_spc_is_placeholder' ) );
+	}
+
+	public function test_page_gets_only_the_side_placeholder_box() {
+		global $wp_meta_boxes;
+		$wp_meta_boxes = array();
+		spc_add_meta_boxes( 'page' );
+		$this->assertArrayHasKey( 'spc_placeholder', $wp_meta_boxes['page']['side']['high'] );
+		$this->assertSame( '公開前チェック', $wp_meta_boxes['page']['side']['high']['spc_placeholder']['title'] );
+		$this->assertArrayNotHasKey( 'normal', $wp_meta_boxes['page'] );
+
+		$wp_meta_boxes = array();
+		spc_add_meta_boxes( 'post' );
+		$this->assertEmpty( $wp_meta_boxes );
+	}
+
+	public function test_placeholder_box_renders_nonce_and_checkbox_for_page() {
+		$id = $this->post( 'page' );
+		update_post_meta( $id, '_spc_is_placeholder', '1' );
+		ob_start();
+		spc_render_placeholder_box( get_post( $id ) );
+		$html = ob_get_clean();
+		$this->assertStringContainsString( 'name="spc_meta_nonce"', $html );
+		$this->assertStringContainsString( 'name="spc_meta[_spc_is_placeholder]"', $html );
+		$this->assertStringContainsString( 'checked', $html );
+		$this->assertStringContainsString( '仮データ（公開前に必ず差し替え）', $html );
+	}
+
+	public function test_page_placeholder_checkbox_saves_and_clears_via_save_post() {
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'administrator' ) ) );
+		$id = $this->post( 'page' );
+		// ブロックエディタのメタボックスは post.php への従来の送信で保存される（save_post_page が動く）。
+		$_POST = array(
+			'spc_meta'       => array( '_spc_is_placeholder' => '1' ),
+			'spc_meta_nonce' => wp_create_nonce( 'spc_save_meta' ),
+		);
+		wp_update_post( array( 'ID' => $id, 'post_title' => '料金・送料' ) );
+		$this->assertSame( '1', get_post_meta( $id, '_spc_is_placeholder', true ) );
+
+		$_POST = array( 'spc_meta_nonce' => wp_create_nonce( 'spc_save_meta' ) ); // チェックなし
+		wp_update_post( array( 'ID' => $id, 'post_title' => '料金・送料' ) );
+		$this->assertSame( '', get_post_meta( $id, '_spc_is_placeholder', true ) );
+
+		// nonce のない保存（REST・クイック編集など）ではメタを触らない。
+		update_post_meta( $id, '_spc_is_placeholder', '1' );
+		$_POST = array();
+		wp_update_post( array( 'ID' => $id, 'post_title' => '料金・送料' ) );
+		$this->assertSame( '1', get_post_meta( $id, '_spc_is_placeholder', true ) );
+	}
+
+	public function test_page_placeholder_save_requires_capability() {
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'subscriber' ) ) );
+		$id = $this->post( 'page' );
+		$this->submit( $id, array( '_spc_is_placeholder' => '1' ) );
+		$this->assertSame( '', get_post_meta( $id, '_spc_is_placeholder', true ) );
+	}
+
 	public function test_definitions_contain_brief_keys_in_order() {
 		$this->assertSame(
 			array( 'spc_case_no', 'spc_item', 'spc_material', 'spc_stain', 'spc_elapsed', 'spc_prior_treatment', 'spc_treatment', 'spc_result', 'spc_days', 'spc_before_id', 'spc_after_id', 'spc_permission_id', '_spc_is_placeholder' ),

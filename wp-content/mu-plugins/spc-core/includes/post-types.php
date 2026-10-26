@@ -102,6 +102,16 @@ function spc_post_types(): array {
 }
 
 /**
+ * 「仮データ」のチェックを持つ投稿タイプ（4タイプ＋固定ページ）。
+ * 公開前チェックの入力欄・一覧の「仮」列・本番の公開ガード・本番の非表示の対象。
+ *
+ * @return string[]
+ */
+function spc_placeholder_post_types(): array {
+	return array_merge( spc_post_types(), array( 'page' ) );
+}
+
+/**
  * タイトル欄の案内文（何を入れるかを平易に示す）。
  */
 function spc_enter_title_here( $text, $post ) {
@@ -133,10 +143,10 @@ function spc_faq_editor_note( $post ): void {
 add_action( 'edit_form_after_title', 'spc_faq_editor_note' );
 
 /**
- * 管理一覧の列：仮データ印と、料金・FAQの要点。
+ * 管理一覧の列：仮データ印（固定ページにも）と、料金・FAQの要点。
  */
 function spc_register_list_columns(): void {
-	foreach ( spc_post_types() as $type ) {
+	foreach ( spc_placeholder_post_types() as $type ) {
 		add_filter( "manage_{$type}_posts_columns", 'spc_list_columns' );
 		add_action( "manage_{$type}_posts_custom_column", 'spc_list_column_content', 10, 2 );
 	}

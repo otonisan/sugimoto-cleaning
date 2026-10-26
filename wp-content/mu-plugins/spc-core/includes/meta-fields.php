@@ -8,7 +8,8 @@ defined( 'ABSPATH' ) || exit;
 
 /**
  * 投稿タイプごとのフィールド定義（表示順どおり）。
- * 末尾の _spc_is_placeholder は全タイプ共通。_spc_seed_key は管理画面に出さないため含めない。
+ * 末尾の _spc_is_placeholder は全タイプ共通。固定ページ（page）はこのチェックだけを持つ。
+ * _spc_seed_key は管理画面に出さないため含めない。
  *
  * @return array<string, array{label:string, type:string, description:string, options?:array}>
  */
@@ -150,6 +151,9 @@ function spc_field_definitions( string $post_type ): array {
 			);
 			break;
 
+		case 'page':
+			break; // 固定ページは「仮データ」のチェックだけ。
+
 		default:
 			return array();
 	}
@@ -195,10 +199,10 @@ function spc_sanitize_field_value( $value, array $def ) {
 }
 
 /**
- * メタキーを登録する（REST非公開・編集権限必須）。
+ * メタキーを登録する（REST非公開・編集権限必須）。固定ページは _spc_is_placeholder（と _spc_seed_key）だけ。
  */
 function spc_register_meta_fields(): void {
-	foreach ( spc_post_types() as $type ) {
+	foreach ( spc_placeholder_post_types() as $type ) {
 		$defs = spc_field_definitions( $type );
 		// 初期データ投入用の識別子。管理画面には出さない。
 		$defs['_spc_seed_key'] = array(
@@ -234,12 +238,15 @@ add_action( 'init', 'spc_register_meta_fields', 20 );
 
 /**
  * メタボックスを追加する（本体は左、仮データのチェックは右サイドに常時表示）。
+ * 固定ページは右サイドの「公開前チェック」だけ（ブロックエディタでも従来のメタボックスとして保存される）。
  */
 function spc_add_meta_boxes( string $post_type ): void {
-	if ( ! in_array( $post_type, spc_post_types(), true ) ) {
+	if ( ! in_array( $post_type, spc_placeholder_post_types(), true ) ) {
 		return;
 	}
-	add_meta_box( 'spc_fields', __( '詳細情報', 'spc' ), 'spc_render_meta_box', $post_type, 'normal', 'high' );
+	if ( in_array( $post_type, spc_post_types(), true ) ) {
+		add_meta_box( 'spc_fields', __( '詳細情報', 'spc' ), 'spc_render_meta_box', $post_type, 'normal', 'high' );
+	}
 	add_meta_box( 'spc_placeholder', __( '公開前チェック', 'spc' ), 'spc_render_placeholder_box', $post_type, 'side', 'high' );
 }
 add_action( 'add_meta_boxes', 'spc_add_meta_boxes' );
@@ -293,10 +300,17 @@ function spc_render_field_input( string $key, array $def, $value ): void {
 }
 
 /**
- * 本体のメタボックス（表形式）。nonce はここで1つだけ出力する。
+ * 保存用の nonce。どちらのメタボックスからも出す（固定ページは右サイドだけのため。同じ値なので重複してよい）。
+ */
+function spc_render_meta_nonce(): void {
+	printf( '<input type="hidden" name="spc_meta_nonce" value="%s">', esc_attr( wp_create_nonce( 'spc_save_meta' ) ) );
+}
+
+/**
+ * 本体のメタボックス（表形式）。
  */
 function spc_render_meta_box( WP_Post $post ): void {
-	printf( '<input type="hidden" name="spc_meta_nonce" value="%s">', esc_attr( wp_create_nonce( 'spc_save_meta' ) ) );
+	spc_render_meta_nonce();
 	echo '<table class="form-table" role="presentation"><tbody>';
 	foreach ( spc_field_definitions( $post->post_type ) as $key => $def ) {
 		if ( '_spc_is_placeholder' === $key ) {
@@ -320,6 +334,7 @@ function spc_render_meta_box( WP_Post $post ): void {
  * 右サイドの「公開前チェック」。
  */
 function spc_render_placeholder_box( WP_Post $post ): void {
+	spc_render_meta_nonce();
 	$def = spc_field_definitions( $post->post_type )['_spc_is_placeholder'];
 	spc_render_field_input( '_spc_is_placeholder', $def, get_post_meta( $post->ID, '_spc_is_placeholder', true ) );
 }
@@ -355,10 +370,10 @@ function spc_save_meta_box( int $post_id ): void {
 }
 
 /**
- * 4タイプ分の保存フック。
+ * 4タイプ＋固定ページの保存フック。
  */
 function spc_hook_meta_box_saves(): void {
-	foreach ( spc_post_types() as $type ) {
+	foreach ( spc_placeholder_post_types() as $type ) {
 		add_action( "save_post_{$type}", 'spc_save_meta_box' );
 	}
 }

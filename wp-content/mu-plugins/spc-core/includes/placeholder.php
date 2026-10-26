@@ -59,14 +59,18 @@ function spc_add_placeholder_guard( array $args ): array {
 }
 
 /**
- * 本番ではフロントのメインクエリ（事例）から公開済みの仮データを除く。管理画面は対象外。
+ * 本番ではフロントのメインクエリ（事例・固定ページ・検索）から公開済みの仮データを除く（仮の固定ページは404）。
+ * 管理画面は対象外。
  */
 function spc_exclude_placeholder_from_main_query( WP_Query $query ): void {
 	if ( is_admin() || ! $query->is_main_query() || ! spc_is_production() ) {
 		return;
 	}
-	$types = (array) $query->get( 'post_type' );
-	if ( ! in_array( 'spc_case', $types, true ) && ! $query->is_post_type_archive( 'spc_case' ) && ! ( $query->is_search() && '' === (string) $query->get( 'post_type' ) ) ) {
+	$types     = (array) $query->get( 'post_type' );
+	$is_case   = in_array( 'spc_case', $types, true ) || $query->is_post_type_archive( 'spc_case' );
+	$is_page   = in_array( 'page', $types, true ) || $query->is_page();
+	$is_search = $query->is_search() && '' === (string) $query->get( 'post_type' );
+	if ( ! $is_case && ! $is_page && ! $is_search ) {
 		return;
 	}
 	$query->set( 'meta_query', spc_add_placeholder_guard( array( 'meta_query' => $query->get( 'meta_query' ) ) )['meta_query'] );
@@ -137,7 +141,7 @@ function spc_placeholder_report(): array {
 
 	$posts = get_posts(
 		array(
-			'post_type'              => array_merge( spc_post_types(), array( 'page' ) ), // 固定ページも対象（公開ガードは対象外）
+			'post_type'              => spc_placeholder_post_types(),
 			'post_status'            => array( 'publish', 'future', 'draft', 'pending', 'private' ),
 			'posts_per_page'         => -1,
 			'orderby'                => 'ID',
@@ -222,11 +226,11 @@ function spc_placeholder_report(): array {
 }
 
 /**
- * 本番で公開（予約含む）状態の仮データを下書きに戻す。
+ * 本番で公開（予約含む）状態の仮データ（4タイプ＋固定ページ）を下書きに戻す。
  */
 function spc_unpublish_if_placeholder( int $post_id ): void {
 	$post = get_post( $post_id );
-	if ( ! $post || ! in_array( $post->post_type, spc_post_types(), true ) || ! in_array( $post->post_status, array( 'publish', 'future' ), true ) ) {
+	if ( ! $post || ! in_array( $post->post_type, spc_placeholder_post_types(), true ) || ! in_array( $post->post_status, array( 'publish', 'future' ), true ) ) {
 		return;
 	}
 	if ( ! spc_is_production() || ! spc_is_placeholder( $post ) ) {
