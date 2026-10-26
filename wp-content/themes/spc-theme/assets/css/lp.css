@@ -867,6 +867,8 @@
 .spc-price__name {
 	font-weight: 500;
 	word-break: auto-phrase;
+	/* auto-phrase 非対応（Safari）でも、区切りのない長い品目名をセル内で折り返す */
+	overflow-wrap: anywhere;
 }
 
 .spc-price__table .spc-price__amount {
@@ -883,6 +885,7 @@
 	color: var(--color-stone);
 	font-size: var(--text-small);
 	line-height: var(--leading-small);
+	overflow-wrap: anywhere;
 }
 
 .spc-price__disclaimer {

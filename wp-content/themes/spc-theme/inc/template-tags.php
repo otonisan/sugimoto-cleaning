@@ -7,6 +7,7 @@
 defined( 'ABSPATH' ) || exit;
 
 // spc-core が無いときの代替（spc-core の SPC_LINE_URL_PLACEHOLDER と同じ値）。
+// TODO(仮): 仮のURL。本物のLINE追加URLは管理画面の「ブランド設定」で設定する（spc-core が有効なら、こちらは使われない）。
 const SPC_THEME_LINE_URL_FALLBACK = 'https://lin.ee/PLACEHOLDER';
 
 // CTA の設置場所（計測の cta_location）と見た目の種類。
@@ -59,6 +60,7 @@ function spc_cta_block(): void {
 	?>
 	<section class="spc-section spc-cta-block" aria-labelledby="spc-cta-block-title" data-sticky-hide>
 		<div class="spc-container spc-cta-block__inner">
+			<?php // TODO(仮): 文言は依頼元確認後に確定（見出し・説明文） ?>
 			<h2 id="spc-cta-block-title" class="spc-cta-block__title"><?php esc_html_e( 'まずは写真でご相談ください', 'spc' ); ?></h2>
 			<p class="spc-cta-block__text"><?php esc_html_e( '他店で落ちなかったシミのご相談も承ります。写真を拝見し、落とせる可能性とリスクを職人がお伝えします。', 'spc' ); ?></p>
 			<?php spc_cta( 'final' ); ?>

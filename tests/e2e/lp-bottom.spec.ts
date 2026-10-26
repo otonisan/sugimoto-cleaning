@@ -333,47 +333,76 @@ test.describe('トップLP後半（事例・職人・料金・流れ・注意・
     }
   });
 
-  test('セクションの順番（5〜11）、list-style:none のリストに role="list"、影なし、375pxで横スクロールなし、NG表現なし', async ({ page }) => {
-    await page.setViewportSize({ width: 375, height: 812 });
-    await page.goto('/');
-    const names = await page.locator('main > section').evaluateAll((els) =>
-      els.map((el) => [...el.classList].find((c) => /^(hero|spc-(concerns|steps|menu|cases|craftsmen|price|flow|limits|faq|final-cta))$/.test(c))),
-    );
-    expect(names).toEqual([
-      'hero',
-      'spc-concerns',
-      'spc-steps',
-      'spc-menu',
-      'spc-cases',
-      'spc-craftsmen',
-      'spc-price',
-      'spc-flow',
-      'spc-limits',
-      'spc-faq',
-      'spc-final-cta',
-    ]);
-    const bgs = await page.locator('main > section').evaluateAll((els) => els.map((el) => el.className));
-    expect(bgs[6]).not.toMatch(/spc-section--(mist|sumi)/); // 料金は白
-    expect(bgs[8]).not.toMatch(/spc-section--(mist|sumi)/); // お引き受けできない場合は白
-    expect(bgs[9]).not.toMatch(/spc-section--(mist|sumi)/); // FAQは白
+  test('セクションの順番（5〜11）、list-style:none のリストに role="list"、影なし、375pxで横スクロールなし（長い品目名・注記の料金行を含む）、NG表現なし', async ({ page }) => {
+    // 区切りのない60文字の品目名と長い注記（Safari は word-break: auto-phrase 非対応のため overflow-wrap で折り返す）。
+    const longName = 'PremiumCashmereDoubleFacedCoatWithFurCollarAndSilkLining0000'.slice(0, 60);
+    expect(longName).toHaveLength(60);
+    const longNote = 'SurchargeAppliesForHandFinishingOfDelicateTrimsAndLinings'.repeat(2);
+    let priceId = '';
+    try {
+      priceId = wpCli(['post', 'create', '--post_type=spc_price', '--post_status=publish', `--post_title=${longName}`, '--porcelain']);
+      for (const [key, value] of [
+        ['spc_price_group', 'stain'],
+        ['spc_amount', '12000'],
+        ['spc_note', longNote],
+      ]) {
+        wpCli(['post', 'meta', 'update', priceId, key, value]);
+      }
 
-    const unlabeled = await page.evaluate(() =>
-      [...document.querySelectorAll('main ul, main ol')]
-        .filter((el) => getComputedStyle(el).listStyleType === 'none' && el.getAttribute('role') !== 'list')
-        .map((el) => el.className),
-    );
-    expect(unlabeled).toEqual([]);
+      await page.setViewportSize({ width: 375, height: 812 });
+      await page.goto('/');
+      const row = page.locator('.spc-price tr').filter({ hasText: longName });
+      await expect(row).toHaveCount(1);
+      await expect(row.locator('.spc-price__name')).toHaveCSS('overflow-wrap', 'anywhere');
+      await expect(row.locator('.spc-price__note')).toHaveCSS('overflow-wrap', 'anywhere');
+      await expect(row.locator('.spc-price__note')).toContainText(longNote);
+      // 行のどのセルも、中身がはみ出していない。
+      const overflowing = await row.evaluate((tr) =>
+        [...tr.querySelectorAll('th, td')].filter((cell) => cell.scrollWidth > cell.clientWidth + 1).length,
+      );
+      expect(overflowing).toBe(0);
 
-    const shadows = await page.evaluate(() =>
-      [...document.querySelectorAll('main *')].filter((el) => getComputedStyle(el).boxShadow !== 'none').length,
-    );
-    expect(shadows).toBe(0);
+      const names = await page.locator('main > section').evaluateAll((els) =>
+        els.map((el) => [...el.classList].find((c) => /^(hero|spc-(concerns|steps|menu|cases|craftsmen|price|flow|limits|faq|final-cta))$/.test(c))),
+      );
+      expect(names).toEqual([
+        'hero',
+        'spc-concerns',
+        'spc-steps',
+        'spc-menu',
+        'spc-cases',
+        'spc-craftsmen',
+        'spc-price',
+        'spc-flow',
+        'spc-limits',
+        'spc-faq',
+        'spc-final-cta',
+      ]);
+      const bgs = await page.locator('main > section').evaluateAll((els) => els.map((el) => el.className));
+      expect(bgs[6]).not.toMatch(/spc-section--(mist|sumi)/); // 料金は白
+      expect(bgs[8]).not.toMatch(/spc-section--(mist|sumi)/); // お引き受けできない場合は白
+      expect(bgs[9]).not.toMatch(/spc-section--(mist|sumi)/); // FAQは白
 
-    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
+      const unlabeled = await page.evaluate(() =>
+        [...document.querySelectorAll('main ul, main ol')]
+          .filter((el) => getComputedStyle(el).listStyleType === 'none' && el.getAttribute('role') !== 'list')
+          .map((el) => el.className),
+      );
+      expect(unlabeled).toEqual([]);
 
-    const text = await page.locator('main').innerText();
-    for (const ng of NG_WORDS) {
-      expect(text, ng).not.toContain(ng);
+      const shadows = await page.evaluate(() =>
+        [...document.querySelectorAll('main *')].filter((el) => getComputedStyle(el).boxShadow !== 'none').length,
+      );
+      expect(shadows).toBe(0);
+
+      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
+
+      const text = await page.locator('main').innerText();
+      for (const ng of NG_WORDS) {
+        expect(text, ng).not.toContain(ng);
+      }
+    } finally {
+      if (priceId) wpCli(['post', 'delete', priceId, '--force']);
     }
   });
 });
