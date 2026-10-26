@@ -1,0 +1,10 @@
+{
+  "core": "WordPress/WordPress#7.1.3",
+  "phpVersion": "8.3",
+  "themes": ["./wp-content/themes/spc-theme"],
+  "mappings": { "wp-content/mu-plugins": "./wp-content/mu-plugins" },
+  "config": { "WP_ENVIRONMENT_TYPE": "local", "DISALLOW_FILE_EDIT": true },
+  "lifecycleScripts": {
+    "afterStart": "wp-env run cli wp language core install ja --activate && wp-env run cli wp theme activate spc-theme && wp-env run cli wp rewrite structure \"/%postname%/\" --hard"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "name": "sugimoto-cleaning",
+  "private": true,
+  "scripts": {
+    "env:start": "wp-env start",
+    "env:stop": "wp-env stop",
+    "wp": "wp-env run cli wp",
+    "test:php": "wp-env run tests-cli --env-cwd=wp-content/mu-plugins/spc-core composer install --no-interaction && wp-env run tests-cli --env-cwd=wp-content/mu-plugins/spc-core vendor/bin/phpunit",
+    "test:e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.48.0",
+    "@wordpress/env": "^10.0.0"
+  }
+}
