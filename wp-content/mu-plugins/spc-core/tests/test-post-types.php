@@ -30,6 +30,31 @@ class Test_PostTypes extends WP_UnitTestCase {
 		}
 	}
 
+	public function test_staff_supports_featured_image_as_portrait() {
+		$this->assertTrue( post_type_supports( 'spc_staff', 'thumbnail' ) );
+		$labels = get_post_type_object( 'spc_staff' )->labels;
+		$this->assertSame( '顔写真', $labels->featured_image );
+		$this->assertSame( '顔写真を設定', $labels->set_featured_image );
+		$this->assertSame( '顔写真を削除', $labels->remove_featured_image );
+		$this->assertSame( '顔写真として使う', $labels->use_featured_image );
+	}
+
+	public function test_faq_supports_editor_for_answer() {
+		$this->assertTrue( post_type_supports( 'spc_faq', 'editor' ) );
+		$this->assertFalse( post_type_supports( 'spc_price', 'editor' ) );
+		$this->assertFalse( post_type_supports( 'spc_staff', 'editor' ) );
+	}
+
+	public function test_faq_editor_help_note_only_for_faq() {
+		ob_start();
+		do_action( 'edit_form_after_title', self::factory()->post->create_and_get( array( 'post_type' => 'spc_faq' ) ) );
+		$this->assertStringContainsString( 'ここに回答を書きます。トップページと『よくある質問』ページに表示されます。', ob_get_clean() );
+
+		ob_start();
+		do_action( 'edit_form_after_title', self::factory()->post->create_and_get( array( 'post_type' => 'spc_staff' ) ) );
+		$this->assertStringNotContainsString( 'ここに回答を書きます', ob_get_clean() );
+	}
+
 	public function test_labels_are_japanese() {
 		$this->assertSame( '施工事例', get_post_type_object( 'spc_case' )->labels->name );
 		$this->assertSame( '料金', get_post_type_object( 'spc_price' )->labels->name );

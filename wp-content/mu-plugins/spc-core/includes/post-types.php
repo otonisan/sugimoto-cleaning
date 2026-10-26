@@ -29,11 +29,25 @@ function spc_register_post_types(): void {
 		'spc_faq'   => array( __( 'よくある質問', 'spc' ), __( '質問を追加', 'spc' ), 'dashicons-editor-help' ),
 		'spc_staff' => array( __( '職人', 'spc' ), __( '職人を追加', 'spc' ), 'dashicons-admin-users' ),
 	);
+	// FAQ は回答を本文（旧エディタ）に、職人は顔写真をアイキャッチに入れる。
+	$extra_supports = array(
+		'spc_faq'   => array( 'editor' ),
+		'spc_staff' => array( 'thumbnail' ),
+	);
 	foreach ( $internal as $type => $info ) {
+		$labels = spc_post_type_labels( $info[0], $info[1] );
+		if ( 'spc_staff' === $type ) {
+			$labels += array(
+				'featured_image'        => __( '顔写真', 'spc' ),
+				'set_featured_image'    => __( '顔写真を設定', 'spc' ),
+				'remove_featured_image' => __( '顔写真を削除', 'spc' ),
+				'use_featured_image'    => __( '顔写真として使う', 'spc' ),
+			);
+		}
 		register_post_type(
 			$type,
 			array(
-				'labels'              => spc_post_type_labels( $info[0], $info[1] ),
+				'labels'              => $labels,
 				'public'              => false,
 				'publicly_queryable'  => false,
 				'exclude_from_search' => true,
@@ -43,7 +57,7 @@ function spc_register_post_types(): void {
 				'has_archive'         => false,
 				'rewrite'             => false,
 				'menu_icon'           => $info[2],
-				'supports'            => array( 'title', 'page-attributes' ),
+				'supports'            => array_merge( array( 'title', 'page-attributes' ), $extra_supports[ $type ] ?? array() ),
 			)
 		);
 	}
@@ -101,6 +115,22 @@ function spc_enter_title_here( $text, $post ) {
 	return $hints[ $type ] ?? $text;
 }
 add_filter( 'enter_title_here', 'spc_enter_title_here', 10, 2 );
+
+/**
+ * FAQ の編集画面：本文欄の上に、何を書く欄かを一行で示す。
+ *
+ * @param WP_Post $post 編集中の投稿。
+ */
+function spc_faq_editor_note( $post ): void {
+	if ( ! $post instanceof WP_Post || 'spc_faq' !== $post->post_type ) {
+		return;
+	}
+	printf(
+		'<p class="description">%s</p>',
+		esc_html__( 'ここに回答を書きます。トップページと『よくある質問』ページに表示されます。', 'spc' )
+	);
+}
+add_action( 'edit_form_after_title', 'spc_faq_editor_note' );
 
 /**
  * 管理一覧の列：仮データ印と、料金・FAQの要点。
