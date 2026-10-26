@@ -30,6 +30,11 @@ function spc_enqueue_assets(): void {
 		$deps = array( 'spc-' . $name );
 	}
 	wp_enqueue_style( 'spc-style', get_stylesheet_uri(), $deps, spc_asset_version( 'style.css' ) );
+
+	// LP の部品はトップだけで読み込む。
+	if ( is_front_page() ) {
+		wp_enqueue_style( 'spc-lp', get_theme_file_uri( 'assets/css/lp.css' ), array( 'spc-style' ), spc_asset_version( 'assets/css/lp.css' ) );
+	}
 }
 add_action( 'wp_enqueue_scripts', 'spc_enqueue_assets' );
 

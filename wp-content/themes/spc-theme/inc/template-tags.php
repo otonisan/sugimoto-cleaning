@@ -1,6 +1,6 @@
 <?php
 /**
- * 表示用の関数（CTA・仮バッジ・仮枠・メニュー）。
+ * 表示用の関数（CTA・仮バッジ・仮枠・FV・メニュー）。
  * spc-core が無くても表示が壊れないよう、function_exists で確かめてから呼ぶ。
  */
 
@@ -84,16 +84,39 @@ function spc_placeholder_badge( ?int $post_id = null, bool $force = false ): voi
 }
 
 /**
+ * 添付ファイルが表示できる画像か（false なら仮枠を出す）。
+ */
+function spc_has_image( int $attachment_id ): bool {
+	return $attachment_id > 0 && wp_attachment_is_image( $attachment_id );
+}
+
+/**
+ * FVの class。スマホで横書きの設定なら hero--sp-horizontal を付ける（DESIGN.md §3）。
+ */
+function spc_hero_classes(): string {
+	$writing = function_exists( 'spc_get_setting' ) ? (string) spc_get_setting( 'hero_sp_writing' ) : 'vertical';
+	return 'horizontal' === $writing ? 'hero hero--sp-horizontal' : 'hero';
+}
+
+/**
+ * 一次返信の目安（ブランド設定）。spc-core が無いときは空。
+ */
+function spc_reply_time_note(): string {
+	return function_exists( 'spc_get_setting' ) ? (string) spc_get_setting( 'reply_time_note' ) : '';
+}
+
+/**
  * 画像、または未設定のときは仮枠を出す。
  *
  * @param int    $attachment_id 添付ファイルID（0なら仮枠）。
  * @param string $size          画像サイズ名（spc-hero / spc-portrait / spc-menu など）。
  * @param string $label         仮枠に書く撮影仕様（例：「職人の顔写真 4:5」）。
  * @param string $ratio         仮枠の縦横比（例：'4/5'）。省略時は 3:2。画像があるときは使わない。
+ * @param array  $attr          画像の属性（例：FVの loading / fetchpriority）。仮枠のときは使わない。
  */
-function spc_image_or_placeholder( int $attachment_id, string $size, string $label, string $ratio = '' ): void {
-	if ( $attachment_id > 0 && wp_attachment_is_image( $attachment_id ) ) {
-		echo wp_get_attachment_image( $attachment_id, $size );
+function spc_image_or_placeholder( int $attachment_id, string $size, string $label, string $ratio = '', array $attr = array() ): void {
+	if ( spc_has_image( $attachment_id ) ) {
+		echo wp_get_attachment_image( $attachment_id, $size, false, $attr );
 		return;
 	}
 	get_template_part(

@@ -16,4 +16,4 @@ if ( preg_match( '#^(\d+(?:\.\d+)?)\s*/\s*(\d+(?:\.\d+)?)$#', $spc_ratio, $spc_m
 	$spc_style = 'aspect-ratio: ' . $spc_m[1] . ' / ' . $spc_m[2] . ';';
 }
 ?>
-<div class="spc-ph-image" role="img" aria-label="<?php echo esc_attr( $spc_text ); ?>"<?php echo '' !== $spc_style ? ' style="' . esc_attr( $spc_style ) . '"' : ''; ?>><?php echo esc_html( $spc_text ); ?></div>
+<div class="spc-ph-image" role="img" aria-label="<?php echo esc_attr( $spc_text ); ?>"<?php echo '' !== $spc_style ? ' style="' . esc_attr( $spc_style ) . '"' : ''; ?>><span class="spc-ph-image__label"><?php echo esc_html( $spc_text ); ?></span></div>

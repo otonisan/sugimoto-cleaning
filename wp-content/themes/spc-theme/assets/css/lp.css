@@ -1,0 +1,423 @@
+/*
+ * トップ / LP の部品（front-page.php だけで読み込む）。
+ * 見せ場は FV の1か所だけ（DESIGN.md §1）。ほかのセクションは静かに組む。
+ * セクション同士の余白は .spc-section の padding だけで取る（子要素の margin と二重にしない）。
+ */
+
+/* ==========================================================================
+   1 ファーストビュー（DESIGN.md §4 のワイヤー・§7 の動き）
+   ========================================================================== */
+
+.hero {
+	background: var(--color-paper);
+}
+
+/* 写真の枠。SP は 3:4 を基本に、h1・サブコピー・CTA が最初の画面に収まる高さまで縮める */
+.hero__visual {
+	position: relative;
+	overflow: hidden;
+	height: clamp(320px, 100vh - 340px, 133.333vw);
+	height: clamp(320px, 100svh - 340px, 133.333vw);
+	background: var(--color-sumi); /* ぼけた縁が白く光らないように */
+}
+
+/* ピント合わせの動きは写真だけに付ける（文字はぼかさない） */
+.hero__media {
+	position: absolute;
+	inset: 0;
+	animation: spc-hero-focus 900ms ease-out backwards;
+}
+
+.hero__media > img,
+.hero__media > .spc-ph-image {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+@keyframes spc-hero-focus {
+	from {
+		filter: blur(6px);
+	}
+
+	to {
+		filter: blur(0);
+	}
+}
+
+/* 墨のオーバーレイ（最大40%）。実写の明るさに合わせて 0.4 以下で調整する */
+.hero__overlay {
+	position: absolute;
+	inset: 0;
+	background: var(--color-sumi);
+	opacity: 0.36;
+}
+
+/*
+ * 仮枠のあいだは、灰白の上では白い h1 が読めないため、枠そのものを暖灰にする
+ * （白文字とのコントラスト約5.6:1）。「仮｜…」の文字は白い下地に載せて読めるようにする。
+ */
+.hero__media--placeholder .spc-ph-image {
+	align-items: flex-start;
+	justify-content: flex-start;
+	padding: var(--space-16) var(--page-padding);
+	background: var(--color-stone);
+	text-align: left;
+}
+
+.hero__media--placeholder .spc-ph-image__label {
+	padding: 2px var(--space-8);
+	background: var(--color-paper);
+}
+
+/*
+ * キャッチ：縦書き・明朝700・白。写真の右寄りに置く。
+ * 行の span はインラインのまま、行の長さ（6字分より長く7字分より短い）で「、」の後ろで折り返す。
+ * ブロックにすると読み上げ名に空白が入るため（「諦めかけた、 その一着に。」）。
+ */
+.hero__title {
+	--hero-measure: 7.2em; /* 1字 = 1em + 字間0.12em。6字 6.72em < 7.2em < 7字 7.84em */
+	--hero-stagger: 1.5em; /* SP の縦書きだけ、2列目を少し下げて段をずらす */
+	position: absolute;
+	top: var(--space-32);
+	right: var(--page-padding);
+	box-sizing: content-box;
+	inline-size: var(--hero-measure);
+	padding-inline-start: var(--hero-stagger);
+	color: var(--color-paper);
+	font-size: var(--text-hero);
+	font-weight: 700;
+	line-height: var(--leading-hero);
+	letter-spacing: var(--tracking-hero);
+	text-indent: calc(-1 * var(--hero-stagger));
+	writing-mode: vertical-rl;
+}
+
+/* サブコピー・対応メニュー・CTA は写真の外に横書きで置く */
+.hero__body {
+	padding: var(--space-24) var(--page-padding) var(--space-48);
+}
+
+.hero__sub {
+	max-width: var(--measure-lead);
+	font-size: var(--text-lead);
+	line-height: var(--leading-lead);
+	word-break: auto-phrase;
+}
+
+.hero__menu {
+	margin-top: var(--space-8);
+	font-weight: 700;
+}
+
+.hero__cta {
+	margin-top: var(--space-24);
+}
+
+/* SP で横書きを選んだとき：写真の左下に2行（PC は常に縦書き） */
+@media (max-width: 767px) {
+	.hero--sp-horizontal .hero__title {
+		top: auto;
+		right: auto;
+		bottom: var(--space-24);
+		left: var(--page-padding);
+		--hero-stagger: 0px;
+		writing-mode: horizontal-tb;
+	}
+}
+
+/* タブレット：写真は 16:10、文字は写真の下 */
+@media (min-width: 768px) {
+	.hero__visual {
+		height: auto;
+		aspect-ratio: 16 / 10;
+	}
+
+	.hero__title {
+		--hero-stagger: 0px;
+		top: var(--space-48);
+		right: var(--space-48);
+	}
+
+	.hero__body {
+		padding-top: var(--space-32);
+	}
+}
+
+/* PC：写真が画面の約2/3、右のカラムに横書きの文字。右端はヘッダーのCTAとそろえる */
+@media (min-width: 1024px) {
+	.hero {
+		display: grid;
+		grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+		padding-inline-end: max(var(--page-padding), calc((100% - var(--container-max)) / 2));
+	}
+
+	.hero__body {
+		align-self: end;
+		padding: var(--space-48) 0 var(--space-48) var(--space-48);
+	}
+
+	/* 右カラムが狭い 1024px 前後でもはみ出さない */
+	.hero__cta .spc-cta {
+		width: 100%;
+		min-width: 0;
+	}
+}
+
+/* §7 動きを減らす設定では、ぼかさずに最初から表示する */
+@media (prefers-reduced-motion: reduce) {
+	.hero__media {
+		animation: none;
+		filter: none;
+	}
+}
+
+/* ==========================================================================
+   2 悩みと、当店の考え方（白地・カードにしない）
+   ========================================================================== */
+
+.spc-concerns__title {
+	word-break: keep-all;
+}
+
+.spc-concerns__list {
+	max-width: var(--measure);
+	margin-top: var(--space-32);
+	padding: 0;
+	list-style: none;
+	border-bottom: 1px solid var(--color-line);
+}
+
+.spc-concerns__item {
+	padding-block: var(--space-16);
+	border-top: 1px solid var(--color-line);
+	font-size: var(--text-lead);
+	line-height: var(--leading-body);
+}
+
+/* 応答は明朝で一段大きく。色は変えない */
+.spc-concerns__stance {
+	max-width: 20em;
+	margin-top: var(--space-48);
+	font-family: var(--font-mincho);
+	font-size: var(--text-h3);
+	font-weight: 500;
+	line-height: 2;
+	letter-spacing: var(--tracking-h2);
+	word-break: auto-phrase;
+}
+
+@media (min-width: 1024px) {
+	.spc-concerns__inner {
+		display: grid;
+		grid-template-columns: repeat(var(--grid-columns), minmax(0, 1fr));
+		column-gap: var(--gutter);
+		align-items: end;
+	}
+
+	.spc-concerns__title {
+		grid-column: 1 / -1;
+	}
+
+	.spc-concerns__list {
+		grid-column: 1 / span 6;
+	}
+
+	.spc-concerns__stance {
+		grid-column: 8 / -1;
+		margin-top: 0;
+		font-size: calc(var(--text-h3) * 1.25); /* スケールの1段上（25px） */
+	}
+}
+
+/* ==========================================================================
+   3 写真相談の3ステップ（灰白地・番号は手順だから付ける）
+   ========================================================================== */
+
+.spc-steps__list {
+	display: grid;
+	gap: var(--space-32);
+	margin-top: var(--space-48);
+	padding: 0;
+	list-style: none;
+}
+
+.spc-steps__item {
+	display: grid;
+	grid-template-columns: 2em minmax(0, 1fr);
+	column-gap: var(--space-16);
+	align-content: start;
+	padding-top: var(--space-24);
+	border-top: 1px solid var(--color-line);
+}
+
+.spc-steps__item > :not(.spc-steps__num) {
+	grid-column: 2;
+}
+
+.spc-steps__num {
+	grid-row: 1 / span 4;
+	font-family: var(--font-mincho);
+	font-size: var(--text-h2);
+	font-weight: 500;
+	line-height: 1.2;
+	font-variant-numeric: tabular-nums;
+}
+
+.spc-steps__heading {
+	word-break: auto-phrase;
+}
+
+.spc-steps__text {
+	max-width: var(--measure);
+	margin-top: var(--space-8);
+}
+
+.spc-steps__note {
+	margin-top: var(--space-8);
+	color: var(--color-stone);
+	font-size: var(--text-small);
+	line-height: var(--leading-small);
+}
+
+/* 送ってほしい写真の例：白い枠＋中身の簡単な図＋文字 */
+.spc-steps__photos {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 96px));
+	gap: var(--space-16);
+	margin-top: var(--space-24);
+	padding: 0;
+	list-style: none;
+}
+
+.spc-steps__frame {
+	position: relative;
+	display: block;
+	aspect-ratio: 3 / 4;
+	border: 1px solid var(--color-line);
+	background: var(--color-paper);
+}
+
+.spc-steps__frame > span {
+	position: absolute;
+}
+
+/* 全体：衣類の形 */
+.spc-steps__frame--whole > span {
+	inset: 18% 14%;
+	background: var(--color-line);
+	clip-path: polygon(32% 0, 68% 0, 100% 16%, 90% 38%, 78% 32%, 78% 100%, 22% 100%, 22% 32%, 10% 38%, 0 16%);
+}
+
+/* 接写：画面いっぱいの生地にシミ */
+.spc-steps__frame--closeup {
+	background: var(--color-line);
+}
+
+.spc-steps__frame--closeup > span {
+	top: 34%;
+	left: 26%;
+	width: 46%;
+	aspect-ratio: 1;
+	border-radius: 46% 54% 50% 50%;
+	background: var(--color-stone);
+}
+
+/* 洗濯表示：タグに記号と文字の行 */
+.spc-steps__frame--care > span {
+	inset: 22% 24%;
+	border: 1px solid var(--color-stone);
+}
+
+.spc-steps__frame--care > span::before,
+.spc-steps__frame--care > span::after {
+	content: "";
+	position: absolute;
+	left: 18%;
+}
+
+.spc-steps__frame--care > span::before {
+	top: 14%;
+	width: 30%;
+	aspect-ratio: 1;
+	border: 1px solid var(--color-stone);
+}
+
+.spc-steps__frame--care > span::after {
+	top: 52%;
+	right: 18%;
+	height: 22%;
+	border-block: 1px solid var(--color-stone);
+}
+
+.spc-steps__photo-label {
+	display: block;
+	margin-top: var(--space-8);
+	font-size: var(--text-small);
+	line-height: var(--leading-small);
+}
+
+.spc-steps__cta {
+	margin-top: var(--space-48);
+}
+
+@media (min-width: 1024px) {
+	.spc-steps__list {
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: var(--gutter);
+	}
+
+	.spc-steps__item {
+		display: block;
+	}
+
+	.spc-steps__num {
+		display: block;
+		margin-bottom: var(--space-16);
+	}
+}
+
+/* ==========================================================================
+   4 対応メニュー（白地・影なし・ホバーの動きなし）
+   ========================================================================== */
+
+.spc-menu__list {
+	display: grid;
+	gap: var(--space-48);
+	margin-top: var(--space-48);
+	padding: 0;
+	list-style: none;
+}
+
+/* 項目全体を押せるようにする（リンクの名前は品目名だけ） */
+.spc-menu__item {
+	position: relative;
+}
+
+.spc-menu__label {
+	margin-top: var(--space-16);
+}
+
+.spc-menu__link::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+}
+
+.spc-menu__text {
+	max-width: var(--measure);
+	margin-top: var(--space-8);
+}
+
+@media (min-width: 768px) {
+	.spc-menu__list {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: var(--space-48) var(--gutter);
+	}
+}
+
+@media (min-width: 1024px) {
+	.spc-menu__list {
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+	}
+}
