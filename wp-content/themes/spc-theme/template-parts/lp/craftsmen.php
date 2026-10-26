@@ -54,8 +54,8 @@ $spc_staff = spc_lp_query( 'spc_staff', array( 'posts_per_page' => 4 ) );
 			<div class="spc-craftsmen__base">
 				<div class="spc-craftsmen__workshop">
 					<?php
-					// TODO(仮): 作業場・作業風景の実写（3:2）に差し替え
-					spc_image_or_placeholder( 0, 'spc-menu', '作業風景の実写 3:2', '3/2' );
+					// TODO(仮): 作業場・作業風景の実写（3:2）に差し替え。画像IDは inc/placeholders.php の 'workshop' に入れる。
+					spc_image_or_placeholder( spc_theme_image_id( 'workshop' ), 'spc-menu', '作業風景の実写 3:2', '3/2' );
 					?>
 				</div>
 				<h3 class="spc-craftsmen__base-title"><?php esc_html_e( '施工母体', 'spc' ); ?></h3>

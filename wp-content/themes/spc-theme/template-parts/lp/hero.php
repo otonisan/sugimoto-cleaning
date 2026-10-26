@@ -6,8 +6,8 @@
 
 defined( 'ABSPATH' ) || exit;
 
-// TODO(仮): 実写（繊維マクロ）に差し替え。添付ファイルIDを入れると画像が出る（SPは3:4、PCは16:10で切り抜く）。
-$spc_hero_image_id  = 0;
+// TODO(仮): 実写（繊維マクロ）に差し替え。inc/placeholders.php の 'hero' に添付ファイルIDを入れると画像が出る（SPは3:4、PCは16:10で切り抜く）。
+$spc_hero_image_id  = spc_theme_image_id( 'hero' );
 $spc_hero_has_photo = spc_has_image( $spc_hero_image_id );
 ?>
 <section class="<?php echo esc_attr( spc_hero_classes() ); ?>" aria-labelledby="spc-hero-title" data-sticky-hide>

@@ -124,6 +124,12 @@ function spc_settings_page_url(): string {
 /**
  * 公開前に差し替えが必要な項目の一覧。空なら公開OK。
  *
+ * 各項目の形：array{type:string,label:string,edit_url:string}
+ * - type：'post'（仮データの投稿・固定ページ）/ 'line_url' / 'line_qr' / 'brand_name' / 'gtm_id' / 'reply_time_note'
+ *   ／フィルタ spc_placeholder_report で追加されるもの（テーマの仮画像は 'theme_image'）。
+ * - label：管理画面・CLIにそのまま出す日本語の説明。
+ * - edit_url：直す画面のURL。管理画面で直せないもの（テーマのファイル）は ''（リンクなし）。
+ *
  * @return array<int,array{type:string,label:string,edit_url:string}>
  */
 function spc_placeholder_report(): array {
@@ -161,6 +167,14 @@ function spc_placeholder_report(): array {
 			'edit_url' => $settings_url,
 		);
 	}
+	$qr_id = (int) spc_get_setting( 'line_qr_id' );
+	if ( $qr_id < 1 || ! wp_attachment_is_image( $qr_id ) ) {
+		$report[] = array(
+			'type'     => 'line_qr',
+			'label'    => __( 'LINE QRコード画像が未設定です', 'spc' ),
+			'edit_url' => $settings_url,
+		);
+	}
 	if ( false !== strpos( (string) spc_get_setting( 'brand_name' ), '（仮）' ) ) {
 		$report[] = array(
 			'type'     => 'brand_name',
@@ -173,6 +187,34 @@ function spc_placeholder_report(): array {
 			'type'     => 'gtm_id',
 			'label'    => __( 'GTMコンテナIDが未設定です', 'spc' ),
 			'edit_url' => $settings_url,
+		);
+	}
+	if ( false !== strpos( (string) spc_get_setting( 'reply_time_note' ), '（仮）' ) ) {
+		$report[] = array(
+			'type'     => 'reply_time_note',
+			'label'    => __( '一次返信の目安が仮のままです', 'spc' ),
+			'edit_url' => $settings_url,
+		);
+	}
+
+	/**
+	 * 公開前チェックの項目を追加する（テーマに直接置いた仮の写真など）。
+	 * 項目の形は上の docblock と同じ。edit_url は '' でもよい。
+	 *
+	 * @param array<int,array{type:string,label:string,edit_url:string}> $report 項目の一覧。
+	 */
+	$filtered = apply_filters( 'spc_placeholder_report', $report );
+
+	// 形の崩れた項目は捨てる（サイトヘルス・CLIの表示を壊さないため）。
+	$report = array();
+	foreach ( is_array( $filtered ) ? $filtered : array() as $item ) {
+		if ( ! is_array( $item ) || ! isset( $item['label'] ) || ! is_scalar( $item['label'] ) || '' === (string) $item['label'] ) {
+			continue;
+		}
+		$report[] = array(
+			'type'     => isset( $item['type'] ) && is_scalar( $item['type'] ) ? (string) $item['type'] : '',
+			'label'    => (string) $item['label'],
+			'edit_url' => isset( $item['edit_url'] ) && is_scalar( $item['edit_url'] ) ? (string) $item['edit_url'] : '',
 		);
 	}
 
@@ -311,7 +353,9 @@ function spc_site_health_placeholder(): array {
 
 	$items = '';
 	foreach ( $report as $item ) {
-		$items .= '<li><a href="' . esc_url( $item['edit_url'] ) . '">' . esc_html( $item['label'] ) . '</a></li>';
+		$items .= '' !== $item['edit_url']
+			? '<li><a href="' . esc_url( $item['edit_url'] ) . '">' . esc_html( $item['label'] ) . '</a></li>'
+			: '<li>' . esc_html( $item['label'] ) . '</li>';
 	}
 	$production            = spc_is_production();
 	$result['status']      = $production ? 'critical' : 'recommended';

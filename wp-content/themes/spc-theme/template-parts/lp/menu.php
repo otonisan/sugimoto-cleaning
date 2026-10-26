@@ -10,21 +10,25 @@ $spc_menu_items = array(
 	array(
 		'label' => __( '特殊シミ抜き', 'spc' ),
 		'path'  => '/stain-removal/',
+		'image' => 'menu_stain', // inc/placeholders.php のキー
 		'text'  => __( 'ワインやコーヒー、時間がたったシミなど、他店で落ちなかったシミのご相談も承ります。', 'spc' ),
 	),
 	array(
 		'label' => __( '黄ばみ・汗汚れ', 'spc' ),
 		'path'  => '/stain-removal/#yellowing',
+		'image' => 'menu_yellowing', // inc/placeholders.php のキー
 		'text'  => __( '襟元や脇の黄ばみ、しまっている間に浮き出た汗じみの状態を確認します。', 'spc' ),
 	),
 	array(
 		'label' => __( '高級ダウン', 'spc' ),
 		'path'  => '/down-coat/',
+		'image' => 'menu_down', // inc/placeholders.php のキー
 		'text'  => __( '表地の素材と羽毛の状態を確かめてから、洗い方を決めます。', 'spc' ),
 	),
 	array(
 		'label' => __( 'コート・ジャケット', 'spc' ),
 		'path'  => '/down-coat/#coat',
+		'image' => 'menu_coat', // inc/placeholders.php のキー
 		'text'  => __( 'カシミヤやウールのコート、ジャケットを、裏地や装飾も含めて確認します。', 'spc' ),
 	),
 );
@@ -37,8 +41,8 @@ $spc_menu_items = array(
 				<li class="spc-menu__item">
 					<div class="spc-menu__media">
 						<?php
-						// TODO(仮): 実写（衣類全体・白か灰白の背景、DESIGN.md §5）に差し替え
-						spc_image_or_placeholder( 0, 'spc-menu', $spc_item['label'] . 'の実写 3:2', '3/2' );
+						// TODO(仮): 実写（衣類全体・白か灰白の背景、DESIGN.md §5）に差し替え。画像IDは inc/placeholders.php に入れる。
+						spc_image_or_placeholder( spc_theme_image_id( $spc_item['image'] ), 'spc-menu', $spc_item['label'] . 'の実写 3:2', '3/2' );
 						?>
 					</div>
 					<h3 class="spc-menu__label"><a class="spc-menu__link" href="<?php echo esc_url( home_url( $spc_item['path'] ) ); ?>"><?php echo esc_html( $spc_item['label'] ); ?></a></h3>

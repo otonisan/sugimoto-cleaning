@@ -7,6 +7,8 @@ defined( 'ABSPATH' ) || exit;
 
 /**
  * launch-check の表示用の行（種類・内容・編集URL）。
+ * 種類は spc_placeholder_report() の type（post / line_url / line_qr / brand_name / gtm_id / reply_time_note / theme_image など）。
+ * 編集URLが空の行（theme_image）は管理画面では直せず、テーマのファイルを差し替える。
  *
  * @return array<int,array{種類:string,内容:string,編集URL:string}>
  */

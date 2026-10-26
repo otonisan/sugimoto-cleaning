@@ -10,13 +10,15 @@ class Test_Placeholder extends WP_UnitTestCase {
 		add_filter( 'spc_is_production', '__return_true' );
 	}
 
-	private function good_settings(): void {
+	private function good_settings( array $override = array() ): void {
 		update_option(
 			'spc_settings',
-			array(
-				'brand_name' => '杉本ブランド',
-				'line_url'   => 'https://lin.ee/abc123',
-				'gtm_id'     => 'GTM-AB12CD',
+			$override + array(
+				'brand_name'      => '杉本ブランド',
+				'line_url'        => 'https://lin.ee/abc123',
+				'line_qr_id'      => self::factory()->attachment->create( array( 'post_mime_type' => 'image/png', 'file' => 'line-qr.png' ) ),
+				'gtm_id'          => 'GTM-AB12CD',
+				'reply_time_note' => '営業時間内24時間以内',
 			)
 		);
 	}
@@ -161,7 +163,7 @@ class Test_Placeholder extends WP_UnitTestCase {
 	public function test_report_lists_all_issue_types() {
 		delete_option( 'spc_settings' );
 		$types = wp_list_pluck( spc_placeholder_report(), 'type' );
-		foreach ( array( 'line_url', 'brand_name', 'gtm_id' ) as $t ) {
+		foreach ( array( 'line_url', 'line_qr', 'brand_name', 'gtm_id', 'reply_time_note' ) as $t ) {
 			$this->assertContains( $t, $types );
 		}
 		foreach ( spc_placeholder_report() as $item ) {
@@ -269,9 +271,98 @@ class Test_Placeholder extends WP_UnitTestCase {
 	}
 
 	public function test_report_flags_brand_name_with_fullwidth_marker_only() {
-		update_option( 'spc_settings', array( 'brand_name' => '（仮）名', 'line_url' => 'https://lin.ee/a', 'gtm_id' => 'GTM-AB12CD' ) );
+		$this->good_settings( array( 'brand_name' => '（仮）名' ) );
 		$this->assertSame( array( 'brand_name' ), wp_list_pluck( spc_placeholder_report(), 'type' ) );
 		$this->assertSame( 'ブランド名に『（仮）』が含まれています', spc_placeholder_report()[0]['label'] );
+	}
+
+	public function test_report_flags_missing_or_non_image_line_qr() {
+		$this->good_settings( array( 'line_qr_id' => 0 ) );
+		$report = spc_placeholder_report();
+		$this->assertSame( array( 'line_qr' ), wp_list_pluck( $report, 'type' ) );
+		$this->assertSame( 'LINE QRコード画像が未設定です', $report[0]['label'] );
+		$this->assertStringContainsString( 'page=spc-settings', $report[0]['edit_url'] );
+
+		// DBに直接、画像でない添付や存在しないIDが入っていても未設定として扱う。
+		$pdf = self::factory()->attachment->create( array( 'post_mime_type' => 'application/pdf', 'file' => 'qr.pdf' ) );
+		$this->good_settings( array( 'line_qr_id' => $pdf ) );
+		$this->assertSame( array( 'line_qr' ), wp_list_pluck( spc_placeholder_report(), 'type' ) );
+		$this->good_settings( array( 'line_qr_id' => 999999 ) );
+		$this->assertSame( array( 'line_qr' ), wp_list_pluck( spc_placeholder_report(), 'type' ) );
+	}
+
+	public function test_report_flags_reply_time_note_with_placeholder_marker() {
+		$this->good_settings( array( 'reply_time_note' => '営業時間内24時間以内（仮）' ) );
+		$report = spc_placeholder_report();
+		$this->assertSame( array( 'reply_time_note' ), wp_list_pluck( $report, 'type' ) );
+		$this->assertSame( '一次返信の目安が仮のままです', $report[0]['label'] );
+		$this->assertStringContainsString( 'page=spc-settings', $report[0]['edit_url'] );
+
+		delete_option( 'spc_settings' ); // 初期値は（仮）付き
+		$this->assertContains( 'reply_time_note', wp_list_pluck( spc_placeholder_report(), 'type' ) );
+	}
+
+	public function test_report_filter_can_add_items_and_drops_malformed_ones() {
+		$this->good_settings();
+		add_filter(
+			'spc_placeholder_report',
+			static function ( $items ) {
+				$items[] = array( 'type' => 'theme_image', 'label' => 'トップ画像がまだ仮の枠です', 'edit_url' => '' );
+				$items[] = 'broken';
+				$items[] = array( 'type' => 'x' ); // label なし
+				return $items;
+			}
+		);
+		$this->assertSame(
+			array( array( 'type' => 'theme_image', 'label' => 'トップ画像がまだ仮の枠です', 'edit_url' => '' ) ),
+			spc_placeholder_report()
+		);
+	}
+
+	public function test_site_health_lists_items_without_edit_url_as_plain_text() {
+		$this->good_settings();
+		add_filter(
+			'spc_placeholder_report',
+			static function ( $items ) {
+				$items[] = array( 'type' => 'theme_image', 'label' => '<b>作業風景</b>の写真がまだ仮の枠です', 'edit_url' => '' );
+				return $items;
+			}
+		);
+		$html = spc_site_health_placeholder()['description'];
+		$this->assertStringContainsString( '<li>&lt;b&gt;作業風景&lt;/b&gt;の写真がまだ仮の枠です</li>', $html );
+		$this->assertStringNotContainsString( 'href=""', $html );
+	}
+
+	public function test_theme_registers_its_placeholder_images() {
+		$file = get_theme_root() . '/spc-theme/inc/placeholders.php';
+		if ( ! file_exists( $file ) ) {
+			$this->markTestSkipped( 'spc-theme が見つかりません。' );
+		}
+		require_once $file;
+		add_filter( 'spc_placeholder_report', 'spc_theme_placeholder_report' ); // フックは前のテストの後始末で外れることがある
+		$this->good_settings();
+
+		$images = spc_theme_placeholder_images();
+		$this->assertSame( array( 'hero', 'menu_stain', 'menu_yellowing', 'menu_down', 'menu_coat', 'workshop' ), array_keys( $images ) );
+
+		$report = spc_placeholder_report();
+		$this->assertCount( 6, $report );
+		$this->assertSame( array( 'theme_image' ), array_values( array_unique( wp_list_pluck( $report, 'type' ) ) ) );
+		$this->assertSame( 'トップ画像（繊維マクロ写真）がまだ仮の枠です（制作側でテーマを差し替え：template-parts/lp/hero.php）', $report[0]['label'] );
+		$this->assertSame( '', $report[0]['edit_url'] );
+
+		// 画像IDが入ったものは出なくなる。
+		$img = self::factory()->attachment->create( array( 'post_mime_type' => 'image/jpeg', 'file' => 'hero.jpg' ) );
+		add_filter(
+			'spc_theme_placeholder_images',
+			static function ( $list ) use ( $img ) {
+				$list['hero']['attachment_id'] = $img;
+				return $list;
+			}
+		);
+		$this->assertSame( $img, spc_theme_image_id( 'hero' ) );
+		$this->assertCount( 5, spc_placeholder_report() );
+		$this->assertSame( 0, spc_theme_image_id( 'unknown' ) );
 	}
 
 	public function test_site_health_status_by_environment() {
@@ -302,11 +393,11 @@ class Test_Placeholder extends WP_UnitTestCase {
 	}
 
 	public function test_admin_bar_node_only_when_items_and_capability() {
-		delete_option( 'spc_settings' ); // 3件
+		delete_option( 'spc_settings' ); // 5件（LINE URL・QR・ブランド名・GTM・返信目安）
 		$this->admin();
 		$node = $this->bar()->get_node( 'spc-placeholder' );
 		$this->assertNotNull( $node );
-		$this->assertSame( '仮データ 3件', $node->title );
+		$this->assertSame( '仮データ 5件', $node->title );
 		$this->assertStringContainsString( 'page=spc-settings', $node->href );
 
 		wp_set_current_user( self::factory()->user->create( array( 'role' => 'subscriber' ) ) );

@@ -113,7 +113,16 @@ class Test_Seed extends WP_UnitTestCase {
 	}
 
 	public function test_every_seeded_post_is_listed_in_report() {
-		update_option( 'spc_settings', array( 'brand_name' => '杉本ブランド', 'line_url' => 'https://lin.ee/abc123', 'gtm_id' => 'GTM-AB12CD' ) );
+		update_option(
+			'spc_settings',
+			array(
+				'brand_name'      => '杉本ブランド',
+				'line_url'        => 'https://lin.ee/abc123',
+				'line_qr_id'      => self::factory()->attachment->create( array( 'post_mime_type' => 'image/png', 'file' => 'line-qr.png' ) ),
+				'gtm_id'          => 'GTM-AB12CD',
+				'reply_time_note' => '営業時間内24時間以内',
+			)
+		);
 		spc_seed_run();
 		$report = spc_placeholder_report();
 		$this->assertCount( count( $this->seeded_ids() ), $report );
