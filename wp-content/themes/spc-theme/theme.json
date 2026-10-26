@@ -1,0 +1,58 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/theme.json",
+	"version": 3,
+	"settings": {
+		"appearanceTools": false,
+		"color": {
+			"custom": false,
+			"customGradient": false,
+			"customDuotone": false,
+			"defaultPalette": false,
+			"defaultGradients": false,
+			"defaultDuotone": false,
+			"duotone": [],
+			"gradients": [],
+			"palette": [
+				{
+					"slug": "paper",
+					"name": "白",
+					"color": "#FFFFFF"
+				},
+				{
+					"slug": "mist",
+					"name": "灰白",
+					"color": "#EFEEEC"
+				},
+				{
+					"slug": "line",
+					"name": "薄灰",
+					"color": "#D6D3CE"
+				},
+				{
+					"slug": "stone",
+					"name": "暖灰",
+					"color": "#6B675F"
+				},
+				{
+					"slug": "sumi",
+					"name": "墨",
+					"color": "#23211E"
+				}
+			]
+		},
+		"typography": {
+			"fontFamilies": [
+				{
+					"slug": "mincho",
+					"name": "Shippori Mincho（見出し）",
+					"fontFamily": "\"Shippori Mincho\", \"Hiragino Mincho ProN\", \"Yu Mincho\", serif"
+				},
+				{
+					"slug": "gothic",
+					"name": "Zen Kaku Gothic New（本文）",
+					"fontFamily": "\"Zen Kaku Gothic New\", \"Hiragino Sans\", \"Hiragino Kaku Gothic ProN\", \"Yu Gothic\", Meiryo, sans-serif"
+				}
+			]
+		}
+	}
+}

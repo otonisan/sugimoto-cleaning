@@ -1,7 +1,10 @@
 <?php
+/**
+ * テーマの読み込み口。機能は inc/ に分ける。
+ */
+
 defined( 'ABSPATH' ) || exit;
 
-// スタイルシートを読み込む。
-add_action( 'wp_enqueue_scripts', static function () {
-	wp_enqueue_style( 'spc-style', get_stylesheet_uri(), array(), wp_get_theme()->get( 'Version' ) );
-} );
+require_once get_theme_file_path( 'inc/setup.php' );
+require_once get_theme_file_path( 'inc/enqueue.php' );
+require_once get_theme_file_path( 'inc/template-tags.php' );

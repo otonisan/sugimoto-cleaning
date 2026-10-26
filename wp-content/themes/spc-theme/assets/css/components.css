@@ -1,0 +1,437 @@
+/*
+ * 共通部品：スキップリンク・ヘッダー・ナビ・CTA・相談ブロック・仮バッジ・仮枠・固定ページ・フッター。
+ * 影・グラデーション・角丸カードは使わない（DESIGN.md §1・§6）。
+ */
+
+/* ---------- スキップリンク ---------- */
+.spc-skip-link {
+	position: absolute;
+	top: var(--space-8);
+	left: var(--space-8);
+	z-index: 100;
+	padding: var(--space-8) var(--space-16);
+	background: var(--color-paper);
+	font-size: var(--text-small);
+}
+
+.spc-skip-link:not(:focus) {
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
+}
+
+/* ---------- ヘッダー ---------- */
+.spc-header {
+	background: var(--color-paper);
+	border-bottom: 1px solid var(--color-line);
+}
+
+.spc-header__inner {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	column-gap: var(--space-16);
+	min-height: 64px;
+	padding-block: var(--space-8);
+}
+
+/* ロゴ画像が決まるまではブランド名のテキスト */
+.spc-header__brand {
+	flex: 1 1 0;
+	min-width: 0;
+	font-family: var(--font-mincho);
+	font-size: var(--text-body);
+	font-weight: 500;
+	line-height: 1.4;
+	letter-spacing: var(--tracking-h2);
+	font-feature-settings: "palt"; /* 括弧の空きを詰める */
+	text-decoration: none;
+}
+
+.spc-header__cta {
+	flex: 0 1 auto;
+}
+
+/* スマホではナビを出さない（固定CTAが受け持つ） */
+.spc-header__nav {
+	display: none;
+}
+
+.spc-nav__list {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.spc-nav a {
+	display: inline-flex;
+	align-items: center;
+	min-height: var(--tap-min);
+	font-size: var(--text-ui);
+	text-decoration: none;
+}
+
+/* ナビは下線なし。ホバーと現在のページだけ下線 */
+.spc-nav a:hover,
+.spc-nav a[aria-current="page"] {
+	text-decoration: underline;
+}
+
+/* タブレット：1段目にロゴとCTA、2段目にナビ */
+@media (min-width: 768px) {
+	.spc-header__brand {
+		font-size: var(--text-h3);
+	}
+
+	.spc-header__nav {
+		display: block;
+		order: 3;
+		flex-basis: 100%;
+		margin-top: var(--space-8);
+		border-top: 1px solid var(--color-line);
+	}
+
+	.spc-header__nav .spc-nav__list {
+		display: flex;
+		flex-wrap: wrap;
+		column-gap: var(--space-24);
+	}
+}
+
+/* PC：ロゴ・ナビ・CTA を1行に */
+@media (min-width: 1024px) {
+	.spc-header__inner {
+		flex-wrap: nowrap;
+		column-gap: var(--space-32);
+		min-height: 80px;
+	}
+
+	.spc-header__brand {
+		flex: 0 1 auto;
+		margin-right: auto;
+	}
+
+	.spc-header__nav {
+		order: 0;
+		flex-basis: auto;
+		margin-top: 0;
+		border-top: 0;
+	}
+}
+
+/* ---------- CTA「写真を送って無料相談」 ---------- */
+.spc-cta {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	max-width: 360px;
+	min-height: var(--cta-height);
+	padding: var(--space-8) var(--space-24);
+	border: 1px solid var(--color-sumi);
+	border-radius: var(--radius-button);
+	background: var(--color-sumi);
+	color: var(--color-paper);
+	font-family: var(--font-gothic);
+	font-size: var(--text-body);
+	font-weight: 700;
+	line-height: 1.4;
+	letter-spacing: 0.08em;
+	text-align: center;
+	text-decoration: none;
+	transition: background-color 150ms ease-out, transform 100ms ease-out;
+}
+
+.spc-cta:hover {
+	background: var(--color-sumi-hover);
+	border-color: var(--color-sumi-hover);
+	text-decoration: none;
+}
+
+.spc-cta:active {
+	transform: scale(0.98);
+}
+
+/* 墨地のセクションの中では白地・墨文字 */
+.spc-cta--inverse {
+	border-color: var(--color-paper);
+	background: var(--color-paper);
+	color: var(--color-sumi);
+}
+
+.spc-cta--inverse:hover {
+	border-color: var(--color-mist);
+	background: var(--color-mist);
+}
+
+.spc-cta--inverse:focus-visible {
+	outline-color: var(--color-paper);
+}
+
+/* ヘッダー用：小さく、補足文なし。狭い画面では2行に折り返す */
+.spc-cta--compact {
+	width: auto;
+	max-width: none;
+	min-height: var(--tap-min);
+	padding: var(--space-4) 12px;
+	font-size: var(--text-ui);
+	letter-spacing: var(--tracking-base);
+}
+
+.spc-cta__note {
+	display: block;
+	margin-top: var(--space-8);
+	color: var(--color-stone);
+	font-size: var(--text-small);
+	line-height: var(--leading-small);
+}
+
+.spc-cta--inverse ~ .spc-cta__note {
+	color: var(--color-paper);
+}
+
+/* 補足文：SP「LINEが開きます」/ PC「LINEのQRコードを表示します」 */
+.spc-cta__note--pc {
+	display: none;
+}
+
+@media (min-width: 768px) {
+	.spc-cta {
+		width: auto;
+		min-width: 320px;
+		max-width: none;
+	}
+
+	.spc-cta--compact {
+		min-width: 0;
+	}
+
+	.spc-cta__note--sp {
+		display: none;
+	}
+
+	.spc-cta__note--pc {
+		display: block;
+	}
+}
+
+/* ---------- ページ下部の相談ブロック（中央揃えはここだけ） ---------- */
+.spc-cta-block {
+	border-top: 1px solid var(--color-line);
+	text-align: center;
+}
+
+.spc-cta-block__inner {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+
+.spc-cta-block__text {
+	max-width: var(--measure-lead);
+	margin-top: var(--space-16);
+	margin-bottom: var(--space-32);
+	word-break: auto-phrase;
+	text-wrap: pretty;
+}
+
+/* ---------- 仮バッジ（仮データの表示専用） ---------- */
+.spc-ph-badge {
+	display: inline-flex;
+	flex: none;
+	align-items: center;
+	justify-content: center;
+	min-width: 2.5em;
+	padding: 2px var(--space-8);
+	border: 1px dashed var(--color-placeholder);
+	border-radius: var(--radius-card);
+	color: var(--color-placeholder);
+	font-family: var(--font-gothic);
+	font-size: var(--text-small);
+	font-weight: 700;
+	line-height: 1.4;
+	letter-spacing: 0;
+	vertical-align: middle;
+}
+
+/* ---------- 画像の仮枠「仮｜撮影仕様」（縦横比は既定 3:2、呼び出し側で上書き） ---------- */
+.spc-ph-image {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	aspect-ratio: 3 / 2;
+	padding: var(--space-16);
+	border: 1px dashed var(--color-placeholder);
+	border-radius: var(--radius-photo);
+	background: var(--color-mist);
+	color: var(--color-placeholder);
+	font-size: var(--text-small);
+	font-weight: 700;
+	line-height: var(--leading-small);
+	text-align: center;
+}
+
+/* ---------- 固定ページ ---------- */
+.spc-page__header {
+	padding-top: var(--space-48);
+	padding-bottom: var(--space-32);
+	border-bottom: 1px solid var(--color-line);
+}
+
+.spc-page__title-row {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--space-8) var(--space-16);
+}
+
+/* 下は相談ブロックが続くため、セクションの余白より控えめにする */
+.spc-page__body {
+	padding-top: var(--space-48);
+	padding-bottom: var(--space-72);
+}
+
+@media (min-width: 768px) {
+	.spc-page__header {
+		padding-top: var(--space-72);
+		padding-bottom: var(--space-48);
+	}
+
+	.spc-page__body {
+		padding-top: var(--space-72);
+	}
+}
+
+@media (min-width: 1024px) {
+	.spc-page__body {
+		padding-bottom: var(--space-96);
+	}
+}
+
+/* 本文（the_content） */
+.spc-prose {
+	max-width: var(--measure);
+}
+
+.spc-prose > * + * {
+	margin-top: var(--space-24);
+}
+
+.spc-prose > * + h2 {
+	margin-top: var(--space-72);
+}
+
+.spc-prose > * + h3 {
+	margin-top: var(--space-48);
+}
+
+.spc-prose ul,
+.spc-prose ol {
+	padding-left: 1.5em;
+}
+
+.spc-prose blockquote {
+	padding-left: var(--space-16);
+	border-left: 1px solid var(--color-line);
+	color: var(--color-stone);
+}
+
+/* §6 表：横罫線のみ、数字は桁揃え */
+.spc-prose .wp-block-table {
+	overflow-x: auto;
+}
+
+.spc-prose table {
+	width: 100%;
+	border-collapse: collapse;
+	font-variant-numeric: tabular-nums;
+}
+
+.spc-prose th,
+.spc-prose td {
+	padding: var(--space-16) var(--space-8);
+	border-bottom: 1px solid var(--color-line);
+	text-align: left;
+	vertical-align: top;
+}
+
+.spc-prose th {
+	font-weight: 500;
+}
+
+.spc-post-list {
+	padding-left: 0;
+	list-style: none;
+}
+
+.spc-post-list__item {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--space-8);
+	padding-block: var(--space-16);
+	border-bottom: 1px solid var(--color-line);
+}
+
+.spc-post-list > * + * {
+	margin-top: 0;
+}
+
+/* ---------- フッター ---------- */
+.spc-footer {
+	padding-block: var(--space-72) var(--space-48);
+	background: var(--color-mist);
+}
+
+.spc-footer__inner {
+	display: grid;
+	gap: var(--space-32);
+}
+
+.spc-footer__brand {
+	font-family: var(--font-mincho);
+	font-size: var(--text-h3);
+	font-weight: 500;
+	line-height: var(--leading-h3);
+	letter-spacing: var(--tracking-h2);
+}
+
+.spc-footer__operator {
+	margin-top: var(--space-8);
+	color: var(--color-stone);
+	font-size: var(--text-small);
+	line-height: var(--leading-small);
+}
+
+.spc-footer__copy {
+	padding-top: var(--space-24);
+	border-top: 1px solid var(--color-line);
+	color: var(--color-stone);
+}
+
+@media (min-width: 1024px) {
+	.spc-footer {
+		padding-top: var(--space-96);
+	}
+
+	.spc-footer__inner {
+		grid-template-columns: repeat(var(--grid-columns), minmax(0, 1fr));
+		column-gap: var(--gutter);
+	}
+
+	.spc-footer__about {
+		grid-column: 1 / span 5;
+	}
+
+	.spc-footer__nav {
+		grid-column: 7 / -1;
+	}
+
+	.spc-footer__copy {
+		grid-column: 1 / -1;
+	}
+}

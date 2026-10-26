@@ -1,0 +1,98 @@
+/*
+ * デザイントークン（DESIGN.md §2・§3・§4・§6 から転記）。
+ * HEX を書いてよいのはこのファイルだけ。ほかの CSS は変数を参照する。
+ */
+
+:root {
+	/* §2 カラー */
+	--color-paper: #FFFFFF;
+	--color-mist: #EFEEEC;
+	--color-line: #D6D3CE;
+	--color-stone: #6B675F;
+	--color-sumi: #23211E;
+	--color-placeholder: #B3261E; /* 仮データの表示専用 */
+	--color-sumi-hover: #3A3733; /* §6 CTA のホバー */
+
+	/* §3 書体 */
+	--font-mincho: "Shippori Mincho", "Hiragino Mincho ProN", "Yu Mincho", serif;
+	--font-gothic: "Zen Kaku Gothic New", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
+
+	/* §3 スケール（SP の値。PC は下のメディアクエリ） */
+	--text-hero: 32px;
+	--text-h2: 25px;
+	--text-h3: 20px;
+	--text-lead: 17px;
+	--text-body: 16px;
+	--text-small: 13px;
+	--text-ui: 14px; /* 補助値：ナビ・ヘッダーの小さいCTA（本文には使わない）。768px以上は15px */
+
+	--leading-hero: 1.5;
+	--leading-h2: 1.5;
+	--leading-h3: 1.6;
+	--leading-lead: 2;
+	--leading-body: 1.9;
+	--leading-small: 1.7;
+
+	--tracking-hero: 0.12em;
+	--tracking-h2: 0.06em;
+	--tracking-base: 0.04em; /* h3・リード・本文・注記 */
+
+	--measure: 35em; /* 本文の行長（全角35字前後） */
+	--measure-lead: 30em;
+
+	/* §4 余白（8px 単位） */
+	--space-4: 4px;
+	--space-8: 8px;
+	--space-16: 16px;
+	--space-24: 24px;
+	--space-32: 32px;
+	--space-48: 48px;
+	--space-72: 72px;
+	--space-96: 96px;
+	--space-128: 128px;
+
+	/* §4 グリッド（SP） */
+	--grid-columns: 4;
+	--gutter: 16px;
+	--page-padding: 20px;
+	--section-padding: 72px;
+	--container-max: 1120px;
+
+	/* §6 角丸 */
+	--radius-photo: 0;
+	--radius-card: 2px; /* 診断票・表・仮バッジ */
+	--radius-button: 4px;
+	--radius-modal: 4px;
+
+	/* §6 CTA の高さ（SP 56px 以上、PC 52px 以上） */
+	--cta-height: 56px;
+	--tap-min: 44px;
+
+	/* §9 フォーカス */
+	--focus-width: 2px;
+	--focus-offset: 3px;
+}
+
+/* タブレット以上：文字は PC の値 */
+@media (min-width: 768px) {
+	:root {
+		--text-hero: 48px;
+		--text-h2: 31px;
+		--text-lead: 18px;
+		--cta-height: 52px;
+		--text-ui: 15px;
+
+		--grid-columns: 8;
+		--gutter: 24px;
+		--page-padding: 32px;
+		--section-padding: 96px;
+	}
+}
+
+@media (min-width: 1024px) {
+	:root {
+		--grid-columns: 12;
+		--gutter: 32px;
+		--section-padding: 128px;
+	}
+}
