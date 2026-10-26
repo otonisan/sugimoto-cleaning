@@ -88,6 +88,9 @@ test.describe('テーマ基盤', () => {
     await page.goto('/price/');
     await expect(page.locator('.spc-header__nav')).toBeHidden();
     await expect(page.locator('.spc-header__brand')).toBeVisible();
+    // ロゴのタップ領域は44px以上。
+    const brandBox = await page.locator('.spc-header__brand').boundingBox();
+    expect(brandBox?.height ?? 0).toBeGreaterThanOrEqual(44);
     await expect(page.locator('header [data-cta-location="header"]')).toBeVisible();
     // スマホの補足文だけが見える。
     await expect(page.locator('[data-cta-location="final"] ~ .spc-cta__note--sp')).toBeVisible();
@@ -138,5 +141,13 @@ test.describe('テーマ基盤', () => {
     await expect(page.locator('h1')).toHaveText('ページが見つかりませんでした。');
     await expect(page.locator('main a[href$="localhost:8888/"]')).toHaveCount(1);
     await expect(page.locator('[data-cta-location="final"]')).toHaveCount(1);
+  });
+
+  test('404：1280px幅で本文の左端が h1 の左端とそろう', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.goto('/no-such-page/');
+    const h1 = await page.locator('h1').boundingBox();
+    const p = await page.locator('.spc-page__body p').first().boundingBox();
+    expect(Math.abs((p?.x ?? -999) - (h1?.x ?? 999))).toBeLessThanOrEqual(1);
   });
 });

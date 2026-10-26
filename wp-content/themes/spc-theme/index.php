@@ -28,23 +28,25 @@ else :
 			</div>
 		</header>
 		<div class="spc-page__body">
-			<div class="spc-container spc-prose">
-				<?php if ( have_posts() ) : ?>
-					<ul class="spc-post-list">
-						<?php
-						while ( have_posts() ) :
-							the_post();
-							?>
-							<li class="spc-post-list__item">
-								<a href="<?php the_permalink(); ?>"><?php the_title(); ?></a>
-								<?php spc_placeholder_badge(); ?>
-							</li>
-						<?php endwhile; ?>
-					</ul>
-					<?php the_posts_pagination(); ?>
-				<?php else : ?>
-					<p><?php esc_html_e( '該当する記事はありません。', 'spc' ); ?></p>
-				<?php endif; ?>
+			<div class="spc-container">
+				<div class="spc-prose">
+					<?php if ( have_posts() ) : ?>
+						<ul class="spc-post-list">
+							<?php
+							while ( have_posts() ) :
+								the_post();
+								?>
+								<li class="spc-post-list__item">
+									<a href="<?php the_permalink(); ?>"><?php the_title(); ?></a>
+									<?php spc_placeholder_badge(); ?>
+								</li>
+							<?php endwhile; ?>
+						</ul>
+						<?php the_posts_pagination(); ?>
+					<?php else : ?>
+						<p><?php esc_html_e( '該当する記事はありません。', 'spc' ); ?></p>
+					<?php endif; ?>
+				</div>
 			</div>
 		</div>
 	</section>

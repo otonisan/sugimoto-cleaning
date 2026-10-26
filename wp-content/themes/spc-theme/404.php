@@ -14,9 +14,11 @@ get_header();
 		</div>
 	</header>
 	<div class="spc-page__body">
-		<div class="spc-container spc-prose">
-			<p><?php esc_html_e( 'お探しのページは、移動したか削除された可能性があります。', 'spc' ); ?></p>
-			<p><a href="<?php echo esc_url( home_url( '/' ) ); ?>"><?php esc_html_e( 'トップページへ戻る', 'spc' ); ?></a></p>
+		<div class="spc-container">
+			<div class="spc-prose">
+				<p><?php esc_html_e( 'お探しのページは、移動したか削除された可能性があります。', 'spc' ); ?></p>
+				<p><a href="<?php echo esc_url( home_url( '/' ) ); ?>"><?php esc_html_e( 'トップページへ戻る', 'spc' ); ?></a></p>
+			</div>
 		</div>
 	</div>
 </section>

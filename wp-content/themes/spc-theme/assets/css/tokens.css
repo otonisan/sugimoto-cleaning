@@ -24,7 +24,7 @@
 	--text-lead: 17px;
 	--text-body: 16px;
 	--text-small: 13px;
-	--text-ui: 14px; /* 補助値：ナビ・ヘッダーの小さいCTA（本文には使わない）。768px以上は15px */
+	--text-ui: 14px; /* DESIGN.md §3 の補助サイズ：ナビ・ヘッダーの小さいCTA（本文には使わない）。768px以上は15px */
 
 	--leading-hero: 1.5;
 	--leading-h2: 1.5;
