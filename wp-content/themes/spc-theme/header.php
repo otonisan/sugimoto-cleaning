@@ -12,7 +12,7 @@ defined( 'ABSPATH' ) || exit;
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <?php wp_head(); ?>
 </head>
-<body <?php body_class(); ?>>
+<body <?php body_class(); ?><?php echo is_front_page() ? ' data-page-type="' . esc_attr( 'lp' ) . '"' : ''; ?>>
 <?php wp_body_open(); ?>
 <a class="spc-skip-link" href="#spc-main"><?php esc_html_e( '本文へ移動', 'spc' ); ?></a>
 <header class="spc-header">

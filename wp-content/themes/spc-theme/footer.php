@@ -18,6 +18,8 @@ defined( 'ABSPATH' ) || exit;
 		<p class="spc-footer__copy"><small>&copy; <?php echo esc_html( wp_date( 'Y' ) ); ?> <?php echo esc_html( spc_brand_name() ); ?></small></p>
 	</div>
 </footer>
+<?php get_template_part( 'template-parts/sticky-cta' ); ?>
+<?php get_template_part( 'template-parts/qr-modal' ); ?>
 <?php wp_footer(); ?>
 </body>
 </html>

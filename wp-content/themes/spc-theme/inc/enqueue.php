@@ -31,6 +31,23 @@ function spc_enqueue_assets(): void {
 	}
 	wp_enqueue_style( 'spc-style', get_stylesheet_uri(), $deps, spc_asset_version( 'style.css' ) );
 
+	// 計測・固定CTA・QRモーダルは全ページ共通。tracking を先に読み込む（defer は依存順を保つ）。
+	$prev = array();
+	foreach ( array( 'tracking', 'qr-modal', 'sticky-cta' ) as $name ) {
+		$rel = 'assets/js/' . $name . '.js';
+		wp_enqueue_script(
+			'spc-' . $name,
+			get_theme_file_uri( $rel ),
+			$prev,
+			spc_asset_version( $rel ),
+			array(
+				'in_footer' => true,
+				'strategy'  => 'defer',
+			)
+		);
+		$prev = array( 'spc-' . $name );
+	}
+
 	// LP の部品はトップだけで読み込む。
 	if ( is_front_page() ) {
 		wp_enqueue_style( 'spc-lp', get_theme_file_uri( 'assets/css/lp.css' ), array( 'spc-style' ), spc_asset_version( 'assets/css/lp.css' ) );

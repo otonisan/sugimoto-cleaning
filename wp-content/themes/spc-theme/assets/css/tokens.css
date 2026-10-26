@@ -68,6 +68,11 @@
 	--cta-height: 56px;
 	--tap-min: 44px;
 
+	/* §6 スマホ固定CTAバーの高さ（セーフエリアは別に足す）／QRモーダルの背景オーバーレイ（墨60%）と影（影を使ってよいのはモーダルだけ） */
+	--sticky-cta-height: 64px;
+	--color-overlay: rgb(35 33 30 / 0.6);
+	--shadow-modal: 0 8px 32px rgb(35 33 30 / 0.2);
+
 	/* §9 フォーカス */
 	--focus-width: 2px;
 	--focus-offset: 3px;

@@ -440,3 +440,134 @@
 		grid-column: 1 / -1;
 	}
 }
+
+/* ---------- スマホ固定CTAバー（768px未満） ---------- */
+.spc-sticky-cta {
+	position: fixed;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	z-index: 50;
+	box-sizing: border-box;
+	display: flex;
+	align-items: center;
+	height: calc(var(--sticky-cta-height) + env(safe-area-inset-bottom, 0px));
+	padding: 0 var(--page-padding) env(safe-area-inset-bottom, 0px);
+	border-top: 1px solid var(--color-line);
+	background: var(--color-paper);
+}
+
+.spc-sticky-cta[hidden] {
+	display: none;
+}
+
+.spc-sticky-cta .spc-cta {
+	width: 100%;
+	max-width: none;
+	min-height: var(--cta-height);
+	padding: var(--space-8) var(--space-16);
+	font-size: var(--text-body);
+	letter-spacing: 0.08em;
+}
+
+@media (max-width: 767.98px) {
+	/* 固定バーにフッターの最下部が隠れないよう、同じ高さの余白を取る */
+	body {
+		padding-bottom: var(--sticky-cta-height);
+	}
+}
+
+@media (min-width: 768px) {
+	.spc-sticky-cta,
+	.spc-sticky-cta[hidden] {
+		display: none;
+	}
+}
+
+/* ---------- QRモーダル（PC） ---------- */
+.spc-qr-modal {
+	width: min(420px, calc(100vw - 2 * var(--page-padding)));
+	padding: var(--space-32);
+	border: 0;
+	border-radius: var(--radius-modal);
+	background: var(--color-paper);
+	color: var(--color-sumi);
+	text-align: center;
+	box-shadow: var(--shadow-modal);
+}
+
+.spc-qr-modal::backdrop {
+	background: var(--color-overlay);
+}
+
+.spc-qr-modal__title {
+	margin: 0 0 var(--space-24);
+	font-family: var(--font-mincho);
+	font-size: var(--text-h3);
+	font-weight: 700;
+	line-height: var(--leading-h3);
+	letter-spacing: var(--tracking-base);
+}
+
+.spc-qr-modal__qr {
+	width: 200px;
+	margin: 0 auto var(--space-16);
+}
+
+.spc-qr-modal__qr img {
+	display: block;
+	width: 100%;
+	height: auto;
+}
+
+.spc-qr-modal__text {
+	margin: 0 0 var(--space-24);
+	line-height: var(--leading-body);
+}
+
+.spc-qr-modal__pc {
+	margin: 0 0 var(--space-24);
+	padding-top: var(--space-24);
+	border-top: 1px solid var(--color-line);
+}
+
+.spc-qr-modal__sub {
+	margin: 0 0 var(--space-8);
+	color: var(--color-stone);
+	font-size: var(--text-small);
+	line-height: var(--leading-small);
+}
+
+.spc-qr-modal__close {
+	min-height: var(--tap-min);
+	padding: var(--space-8) var(--space-24);
+	border: 1px solid var(--color-sumi);
+	border-radius: var(--radius-button);
+	background: var(--color-paper);
+	color: var(--color-sumi);
+	font-family: var(--font-gothic);
+	font-size: var(--text-body);
+	font-weight: 700;
+	cursor: pointer;
+}
+
+.spc-qr-modal__close:hover {
+	background: var(--color-mist);
+}
+
+/* 開くときだけ短い不透明度の変化（150ms）。動きを減らす設定では出さない */
+@media (prefers-reduced-motion: no-preference) {
+	.spc-qr-modal[open] {
+		animation: spc-modal-in 150ms ease-out;
+	}
+}
+
+@keyframes spc-modal-in {
+	from {
+		opacity: 0;
+	}
+
+	to {
+		opacity: 1;
+	}
+}
