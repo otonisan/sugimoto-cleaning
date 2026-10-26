@@ -78,4 +78,18 @@ class Test_Security extends WP_UnitTestCase {
 		$this->assertStringNotContainsString( 'name="generator"', $head );
 		$this->assertSame( '', apply_filters( 'the_generator', '<meta name="generator" content="WordPress 7.1.3" />', 'html' ) );
 	}
+
+	public function test_users_route_is_blocked_regardless_of_case() {
+		wp_set_current_user( 0 );
+		foreach ( array( '/WP/V2/Users', '/wp/V2/USERS/1', '/wp/v2/users/1', '/wp/v2/users/me' ) as $route ) {
+			$res = rest_do_request( new WP_REST_Request( 'GET', $route ) );
+			$this->assertSame( 401, $res->get_status(), $route );
+		}
+	}
+
+	public function test_users_sitemap_provider_is_removed() {
+		$registry = wp_sitemaps_get_server()->registry;
+		$this->assertNull( $registry->get_provider( 'users' ) );
+		$this->assertNotNull( $registry->get_provider( 'posts' ) );
+	}
 }

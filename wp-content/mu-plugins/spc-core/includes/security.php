@@ -25,25 +25,48 @@ add_filter( 'wp_headers', 'spc_remove_pingback_header' );
 add_filter( 'the_generator', '__return_empty_string' );
 
 /**
- * 未ログインでの /wp/v2/users（一覧・個別）を拒否する（ユーザー名の列挙対策）。
- * 他のREST経路とログイン済みの利用（管理画面・ブロックエディタ）には影響しない。
+ * 未ログインでの /wp/v2/users*（一覧・個別・me）を拒否する（ユーザー名の列挙対策）。
+ * ルート照合は大文字小文字を区別しないため、URLではなくエンドポイント自体の
+ * permission_callback を包んで確実に止める。ログイン済みの利用は元の判定のまま。
  *
- * @param mixed           $result  ここまでの結果。
- * @param WP_REST_Server  $server  サーバー。
- * @param WP_REST_Request $request リクエスト。
- * @return mixed
+ * @param array<string,mixed> $endpoints 登録済みのエンドポイント。
+ * @return array<string,mixed>
  */
-function spc_require_login_for_rest_users( $result, $server, $request ) {
-	if ( is_user_logged_in() || ! preg_match( '#^/wp/v2/users(/|$)#', $request->get_route() ) ) {
-		return $result;
+function spc_require_login_for_rest_users( array $endpoints ): array {
+	foreach ( $endpoints as $route => $handlers ) {
+		if ( 0 !== strpos( strtolower( (string) $route ), '/wp/v2/users' ) || ! is_array( $handlers ) ) {
+			continue;
+		}
+		foreach ( $handlers as $i => $handler ) {
+			if ( ! is_array( $handler ) || ! isset( $handler['callback'] ) ) {
+				continue;
+			}
+			$original = $handler['permission_callback'] ?? null;
+			$endpoints[ $route ][ $i ]['permission_callback'] = static function ( $request ) use ( $original ) {
+				if ( ! is_user_logged_in() ) {
+					return new WP_Error(
+						'rest_forbidden',
+						__( 'ログインが必要です。', 'spc' ),
+						array( 'status' => rest_authorization_required_code() )
+					);
+				}
+				return is_callable( $original ) ? call_user_func( $original, $request ) : true;
+			};
+		}
 	}
-	return new WP_Error(
-		'rest_forbidden',
-		__( 'ログインが必要です。', 'spc' ),
-		array( 'status' => rest_authorization_required_code() )
-	);
+	return $endpoints;
 }
-add_filter( 'rest_pre_dispatch', 'spc_require_login_for_rest_users', 10, 3 );
+add_filter( 'rest_endpoints', 'spc_require_login_for_rest_users' );
+
+// ユーザー一覧のサイトマップ（/wp-sitemap-users-1.xml）は投稿者のスラッグを公開するため出さない。
+add_filter(
+	'wp_sitemaps_add_provider',
+	static function ( $provider, $name ) {
+		return 'users' === $name ? false : $provider;
+	},
+	10,
+	2
+);
 
 /**
  * 投稿者アーカイブと ?author=N をトップへ 301 で戻す（ユーザー名の列挙対策）。
