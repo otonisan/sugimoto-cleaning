@@ -221,6 +221,14 @@ test.describe('トップLP後半（事例・職人・料金・流れ・注意・
     await expect(section.locator('h2')).toHaveText('料金の目安');
     // 写真で概算 → 現物で正式見積 → 承認後に施工
     await expect(section.locator('ol.spc-price__steps > li')).toHaveCount(3);
+    // 説明文は本文なので16px以上（--text-small は注記・キャプション専用）。
+    const stepSizes = await section
+      .locator('.spc-price__step-text')
+      .evaluateAll((els) => els.map((el) => parseFloat(getComputedStyle(el).fontSize)));
+    expect(stepSizes).toHaveLength(3);
+    for (const size of stepSizes) {
+      expect(size).toBeGreaterThanOrEqual(16);
+    }
 
     const down = section.locator('tr').filter({ hasText: '高級ダウン' });
     await expect(down).toHaveCount(1);

@@ -811,10 +811,11 @@
 	font-weight: 700;
 }
 
+/* 説明文は本文なので本文サイズ（--text-small は注記・キャプション専用、DESIGN.md §3） */
 .spc-price__step-text {
-	color: var(--color-stone);
-	font-size: var(--text-small);
-	line-height: var(--leading-small);
+	margin-top: var(--space-4);
+	font-size: var(--text-body);
+	line-height: var(--leading-body);
 }
 
 .spc-price__tables {
