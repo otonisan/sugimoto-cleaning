@@ -152,7 +152,7 @@ test.describe('QRモーダル（PC）', () => {
     await expect(cta).toBeFocused();
   });
 
-  test('背景クリック・閉じるボタンで閉じる。モーダル内の CTA は再度開かず qr_modal として記録される', async ({ page }) => {
+  test('背景クリック・閉じるボタンで閉じ、ダイアログの余白のクリックでは閉じない。モーダル内の CTA は再度開かず qr_modal として記録される', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await stubLine(page);
     await page.goto('/');
@@ -161,6 +161,13 @@ test.describe('QRモーダル（PC）', () => {
 
     await open.click();
     await expect(dialog).toBeVisible();
+    // ダイアログの余白（padding）を押しても閉じない（event.target は dialog 自身になる）。
+    const box = await dialog.boundingBox();
+    expect(box).not.toBeNull();
+    await page.mouse.click(box!.x + 8, box!.y + 8);
+    await page.mouse.click(box!.x + box!.width - 8, box!.y + box!.height - 8);
+    await expect(dialog).toBeVisible();
+    // 枠の外（背景）を押すと閉じる。
     await page.mouse.click(5, 5);
     await expect(dialog).toBeHidden();
 

@@ -69,6 +69,20 @@ add_filter(
 );
 
 /**
+ * oEmbed の応答から投稿者名・投稿者URLを外す（ユーザー名の列挙対策）。
+ *
+ * @param array<string,mixed> $data oEmbed の応答データ。
+ * @return array<string,mixed>
+ */
+function spc_oembed_hide_author( $data ) {
+	if ( is_array( $data ) ) {
+		unset( $data['author_name'], $data['author_url'] );
+	}
+	return $data;
+}
+add_filter( 'oembed_response_data', 'spc_oembed_hide_author' );
+
+/**
  * 投稿者アーカイブと ?author=N をトップへ 301 で戻す（ユーザー名の列挙対策）。
  * redirect_canonical（優先度10）より先に動かす。
  */

@@ -89,7 +89,7 @@ function spc_field_definitions( string $post_type ): array {
 					'type'        => 'select',
 					'options'     => array(
 						'stain'     => __( '特殊シミ抜き', 'spc' ),
-						'yellowing' => __( '黄ばみ・黒ずみ', 'spc' ),
+						'yellowing' => __( '黄ばみ・汗汚れ', 'spc' ),
 						'down'      => __( '高級ダウン', 'spc' ),
 						'coat'      => __( 'コート', 'spc' ),
 						'shipping'  => __( '送料', 'spc' ),
@@ -146,7 +146,7 @@ function spc_field_definitions( string $post_type ): array {
 				'spc_bio'  => array(
 					'label'       => __( '紹介文', 'spc' ),
 					'type'        => 'textarea',
-					'description' => __( '経歴や仕事への姿勢を数行で書いてください。職人紹介ページに表示されます。', 'spc' ),
+					'description' => __( '経歴や仕事への姿勢を数行で書いてください。トップページと職人紹介ページに表示されます。', 'spc' ),
 				),
 			);
 			break;

@@ -247,8 +247,37 @@ function spc_unpublish_if_placeholder( int $post_id ): void {
 	);
 	spc_hook_placeholder_guard();
 
+	spc_remember_reverted_post( $post_id );
 	spc_queue_placeholder_notice( $post );
 }
+
+/**
+ * このリクエストで下書きに戻した投稿ID（引数ありで記録、なしで一覧を返す）。
+ *
+ * @return int[]
+ */
+function spc_remember_reverted_post( int $post_id = 0 ): array {
+	static $ids = array();
+	if ( $post_id > 0 ) {
+		$ids[ $post_id ] = $post_id;
+	}
+	return array_values( $ids );
+}
+
+/**
+ * 下書きに戻した投稿の保存後は、コアの「公開しました」ではなく「下書きを更新しました」（message=10）を出す。
+ * 旧エディタの保存後リダイレクトだけが対象（ほかの投稿のメッセージは変えない）。
+ *
+ * @param string $location リダイレクト先。
+ * @param int    $post_id  保存した投稿ID。
+ */
+function spc_placeholder_redirect_message( $location, $post_id ) {
+	if ( ! in_array( (int) $post_id, spc_remember_reverted_post(), true ) ) {
+		return $location;
+	}
+	return add_query_arg( 'message', 10, remove_query_arg( 'message', (string) $location ) );
+}
+add_filter( 'redirect_post_location', 'spc_placeholder_redirect_message', 10, 2 );
 
 /**
  * wp_after_insert_post（メタ保存後）で確認する。
@@ -402,7 +431,7 @@ function spc_admin_bar_placeholder( WP_Admin_Bar $bar ): void {
 		array(
 			'id'    => 'spc-placeholder',
 			'title' => sprintf( /* translators: %d: 件数 */ __( '仮データ %d件', 'spc' ), $count ),
-			'href'  => spc_settings_page_url(),
+			'href'  => admin_url( 'site-health.php' ), // サイトヘルスの「公開前チェック」に項目の一覧が出る
 		)
 	);
 }

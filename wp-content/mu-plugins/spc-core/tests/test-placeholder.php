@@ -107,6 +107,27 @@ class Test_Placeholder extends WP_UnitTestCase {
 		$this->assertSame( array( '赤ワイン' ), get_transient( 'spc_placeholder_notice_' . $uid ) );
 	}
 
+	public function test_reverted_publish_redirects_with_draft_message_instead_of_published() {
+		$this->production();
+		$this->admin();
+		$fake = self::factory()->post->create( array( 'post_type' => 'spc_case', 'post_status' => 'draft' ) );
+		$real = self::factory()->post->create( array( 'post_type' => 'spc_case', 'post_status' => 'draft' ) );
+		update_post_meta( $fake, '_spc_is_placeholder', '1' );
+		wp_update_post( array( 'ID' => $fake, 'post_status' => 'publish' ) );
+		wp_update_post( array( 'ID' => $real, 'post_status' => 'publish' ) );
+		$this->assertSame( 'draft', get_post_status( $fake ) );
+
+		$location = admin_url( 'post.php?post=' . $fake . '&action=edit&message=6' );
+		$filtered = apply_filters( 'redirect_post_location', $location, $fake );
+		$this->assertStringContainsString( 'message=10', $filtered ); // 「下書きを更新しました」
+		$this->assertStringNotContainsString( 'message=6', $filtered );
+		$this->assertStringContainsString( 'post=' . $fake, $filtered );
+
+		// 下書きに戻していない投稿の「公開しました」はそのまま。
+		$location = admin_url( 'post.php?post=' . $real . '&action=edit&message=6' );
+		$this->assertSame( $location, apply_filters( 'redirect_post_location', $location, $real ) );
+	}
+
 	public function test_notice_renders_once_then_clears() {
 		$uid = $this->admin();
 		set_transient( 'spc_placeholder_notice_' . $uid, array( '<b>事例</b>' ), 60 );
@@ -433,7 +454,7 @@ class Test_Placeholder extends WP_UnitTestCase {
 		$node = $this->bar()->get_node( 'spc-placeholder' );
 		$this->assertNotNull( $node );
 		$this->assertSame( '仮データ 5件', $node->title );
-		$this->assertStringContainsString( 'page=spc-settings', $node->href );
+		$this->assertSame( admin_url( 'site-health.php' ), $node->href ); // 依頼元も開けて、項目の一覧が見られる
 
 		wp_set_current_user( self::factory()->user->create( array( 'role' => 'subscriber' ) ) );
 		$this->assertNull( $this->bar()->get_node( 'spc-placeholder' ) );

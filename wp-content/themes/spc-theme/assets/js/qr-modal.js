@@ -31,11 +31,16 @@
 			dialog.close();
 			return;
 		}
-		// 背景クリック（dialog 自身が対象になるのは枠の外側を押したときだけ）
-		if (event.target === dialog) {
+		// 背景クリック。dialog 自身が対象になるのは、枠の外（::backdrop）だけでなく枠内の余白（padding）を押したときも同じ。
+		// そのため、押した位置がダイアログの四角形の外のときだけ閉じる（キーボード操作のクリックは dialog が対象にならない）。
+		if (event.target === dialog && isOutside(event, dialog.getBoundingClientRect())) {
 			dialog.close();
 		}
 	});
+
+	function isOutside(event, rect) {
+		return event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom;
+	}
 
 	// Esc・閉じるボタン・背景クリックのいずれでも、元のボタンへフォーカスを戻す。
 	dialog.addEventListener('close', function () {

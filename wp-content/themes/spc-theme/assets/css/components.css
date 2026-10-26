@@ -471,9 +471,14 @@
 }
 
 @media (max-width: 767.98px) {
-	/* 固定バーにフッターの最下部が隠れないよう、同じ高さの余白を取る */
+	/* 固定バーにフッターの最下部が隠れないよう、同じ高さ（セーフエリア分も含む）の余白を取る */
 	body {
-		padding-bottom: var(--sticky-cta-height);
+		padding-bottom: calc(var(--sticky-cta-height) + env(safe-area-inset-bottom, 0px));
+	}
+
+	/* キーボード操作でフォーカスした要素が固定バーの下に隠れないようにする（WCAG 2.2 2.4.11） */
+	html {
+		scroll-padding-bottom: calc(var(--sticky-cta-height) + env(safe-area-inset-bottom, 0px));
 	}
 }
 

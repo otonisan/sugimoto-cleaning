@@ -118,6 +118,12 @@ class Test_MetaFields extends WP_UnitTestCase {
 		$this->assertSame( 'textarea', spc_field_definitions( 'spc_staff' )['spc_bio']['type'] );
 	}
 
+	public function test_labels_match_the_site_wording() {
+		// LP・仮データと同じ呼び方にする。
+		$this->assertSame( '黄ばみ・汗汚れ', spc_field_definitions( 'spc_price' )['spc_price_group']['options']['yellowing'] );
+		$this->assertStringContainsString( 'トップページと職人紹介ページに表示されます', spc_field_definitions( 'spc_staff' )['spc_bio']['description'] );
+	}
+
 	public function test_int_meta_sanitized() {
 		$id = $this->post( 'spc_price' );
 		update_post_meta( $id, 'spc_amount', '-500abc' );

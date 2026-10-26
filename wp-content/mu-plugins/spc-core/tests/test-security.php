@@ -87,6 +87,16 @@ class Test_Security extends WP_UnitTestCase {
 		}
 	}
 
+	public function test_oembed_response_hides_author() {
+		$user = self::factory()->user->create( array( 'role' => 'author', 'display_name' => '杉本 太郎' ) );
+		$post = self::factory()->post->create( array( 'post_author' => $user, 'post_type' => 'page', 'post_status' => 'publish' ) );
+		$data = get_oembed_response_data( $post, 600 );
+		$this->assertIsArray( $data );
+		$this->assertArrayNotHasKey( 'author_name', $data );
+		$this->assertArrayNotHasKey( 'author_url', $data );
+		$this->assertArrayHasKey( 'title', $data );
+	}
+
 	public function test_users_sitemap_provider_is_removed() {
 		$registry = wp_sitemaps_get_server()->registry;
 		$this->assertNull( $registry->get_provider( 'users' ) );

@@ -33,10 +33,12 @@ test.describe('スマホ固定CTA', () => {
     await expect(bar).toBeHidden();
   });
 
-  test('375px：body の下に固定バーと同じ高さの余白がある', async ({ page }) => {
+  test('375px：body の下に固定バーと同じ高さの余白があり、フォーカス時のスクロールも固定バーの分をあける', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 812 });
     await page.goto('/');
+    // セーフエリア（ホームバー）の分も足す。テスト環境では env(safe-area-inset-bottom) は 0。
     await expect(page.locator('body')).toHaveCSS('padding-bottom', '64px');
+    await expect(page.locator('html')).toHaveCSS('scroll-padding-bottom', '64px');
   });
 
   test('375px：data-sticky-hide のないページ（/price/）でも、相談ブロックが画面外ならスクロール後に表示される', async ({ page }) => {
@@ -53,6 +55,7 @@ test.describe('スマホ固定CTA', () => {
     await page.evaluate(() => window.scrollTo(0, 1500));
     await expect(page.locator('.spc-sticky-cta')).toBeHidden();
     await expect(page.locator('body')).toHaveCSS('padding-bottom', '0px');
+    await expect(page.locator('html')).not.toHaveCSS('scroll-padding-bottom', '64px');
   });
 
   test('固定CTAのクリックは line_click {cta_location: sticky}', async ({ page }) => {
