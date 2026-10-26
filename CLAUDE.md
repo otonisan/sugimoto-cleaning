@@ -25,6 +25,11 @@
 - 口コミ・事例の捏造、無許可のブランドロゴ、「必ず落ちる」等の誇大表現は禁止
 - 料金・実績など未確定の情報は仮置きし、コメントで明示する
 
+## 作業場所
+- リポジトリは `C:\dev\sugimoto-cleaning`。Claude Code はここで起動し、作業・コマンドもここで行う
+- OneDrive 配下には置かない（Docker のマウントや node_modules の同期で問題が出るため）
+- 実装計画の進捗台帳：`.superpowers/sdd/2026-10-26-wordpress-theme-lp/progress.md`（Git管理外）
+
 ## 技術
 - WordPress ＋ 自作のクラシックテーマ（既製テーマ・ページビルダーは使わない）
   - テーマ：`wp-content/themes/spc-theme/`（見た目・テンプレート）
