@@ -1,0 +1,312 @@
+<?php
+/**
+ * 仮データのガード：本番では仮データを公開・表示しない。
+ */
+
+defined( 'ABSPATH' ) || exit;
+
+/**
+ * 本番環境か（フィルタ spc_is_production で上書き可）。
+ */
+function spc_is_production(): bool {
+	return (bool) apply_filters( 'spc_is_production', 'production' === wp_get_environment_type() );
+}
+
+/**
+ * 投稿に「仮データ」のチェックが付いているか。
+ *
+ * @param int|WP_Post $post 投稿ID または投稿。
+ */
+function spc_is_placeholder( $post ): bool {
+	$post_id = $post instanceof WP_Post ? $post->ID : absint( $post );
+	return $post_id > 0 && '1' === (string) get_post_meta( $post_id, '_spc_is_placeholder', true );
+}
+
+/**
+ * フロント表示用のクエリ引数。本番では仮データを除外し、並び順の既定値を入れる。
+ *
+ * @param array<string,mixed> $args 呼び出し側の指定（既定値より優先）。
+ * @return array<string,mixed>
+ */
+function spc_query_args( string $post_type, array $args = array() ): array {
+	$defaults = 'spc_case' === $post_type
+		? array(
+			'orderby' => 'date',
+			'order'   => 'DESC',
+		)
+		: array(
+			'orderby' => 'menu_order',
+			'order'   => 'ASC',
+		);
+	$args     = wp_parse_args( $args, $defaults + array( 'post_status' => 'publish' ) );
+	$args['post_type'] = $post_type;
+
+	if ( spc_is_production() ) {
+		// 仮データ（'1'）以外、またはメタなしだけを通す。
+		$guard = array(
+			'relation' => 'OR',
+			array(
+				'key'     => '_spc_is_placeholder',
+				'compare' => 'NOT EXISTS',
+			),
+			array(
+				'key'     => '_spc_is_placeholder',
+				'value'   => '1',
+				'compare' => '!=',
+			),
+		);
+		if ( ! empty( $args['meta_query'] ) && is_array( $args['meta_query'] ) ) {
+			$args['meta_query'] = array( 'relation' => 'AND', $args['meta_query'], $guard );
+		} else {
+			$args['meta_query'] = $guard;
+		}
+	}
+
+	return $args;
+}
+
+/**
+ * 設定画面（ブランド設定）のURL。
+ */
+function spc_settings_page_url(): string {
+	return admin_url( 'options-general.php?page=spc-settings' );
+}
+
+/**
+ * 公開前に差し替えが必要な項目の一覧。空なら公開OK。
+ *
+ * @return array<int,array{type:string,label:string,edit_url:string}>
+ */
+function spc_placeholder_report(): array {
+	$report = array();
+
+	$posts = get_posts(
+		array(
+			'post_type'              => spc_post_types(),
+			'post_status'            => array( 'publish', 'future', 'draft', 'pending', 'private' ),
+			'posts_per_page'         => -1,
+			'orderby'                => 'ID',
+			'order'                  => 'ASC',
+			'no_found_rows'          => true,
+			'update_post_term_cache' => false,
+			'meta_key'               => '_spc_is_placeholder', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+			'meta_value'             => '1', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
+		)
+	);
+	foreach ( $posts as $post ) {
+		$type_obj = get_post_type_object( $post->post_type );
+		$title    = '' !== $post->post_title ? $post->post_title : __( '（無題）', 'spc' );
+		$report[] = array(
+			'type'     => 'post',
+			/* translators: 1: 投稿タイトル 2: 投稿の種類 */
+			'label'    => sprintf( __( '仮データの投稿：%1$s（%2$s）', 'spc' ), $title, $type_obj ? $type_obj->labels->singular_name : $post->post_type ),
+			'edit_url' => (string) get_edit_post_link( $post->ID, 'raw' ),
+		);
+	}
+
+	$settings_url = spc_settings_page_url();
+	if ( SPC_LINE_URL_PLACEHOLDER === spc_line_url() ) {
+		$report[] = array(
+			'type'     => 'line_url',
+			'label'    => __( 'LINE追加URLが仮のままです', 'spc' ),
+			'edit_url' => $settings_url,
+		);
+	}
+	if ( false !== strpos( (string) spc_get_setting( 'brand_name' ), '（仮）' ) ) {
+		$report[] = array(
+			'type'     => 'brand_name',
+			'label'    => __( 'ブランド名に『（仮）』が含まれています', 'spc' ),
+			'edit_url' => $settings_url,
+		);
+	}
+	if ( '' === (string) spc_get_setting( 'gtm_id' ) ) {
+		$report[] = array(
+			'type'     => 'gtm_id',
+			'label'    => __( 'GTMコンテナIDが未設定です', 'spc' ),
+			'edit_url' => $settings_url,
+		);
+	}
+
+	return $report;
+}
+
+/**
+ * 本番で公開（予約含む）状態の仮データを下書きに戻す。
+ */
+function spc_unpublish_if_placeholder( int $post_id ): void {
+	$post = get_post( $post_id );
+	if ( ! $post || ! in_array( $post->post_type, spc_post_types(), true ) || ! in_array( $post->post_status, array( 'publish', 'future' ), true ) ) {
+		return;
+	}
+	if ( ! spc_is_production() || ! spc_is_placeholder( $post ) ) {
+		return;
+	}
+
+	// 自分のフックを外してから更新する（再帰・二重通知の防止）。
+	spc_unhook_placeholder_guard();
+	wp_update_post(
+		array(
+			'ID'          => $post_id,
+			'post_status' => 'draft',
+		)
+	);
+	spc_hook_placeholder_guard();
+
+	spc_queue_placeholder_notice( $post );
+}
+
+/**
+ * wp_after_insert_post（メタ保存後）で確認する。
+ */
+function spc_guard_after_insert_post( int $post_id ): void {
+	spc_unpublish_if_placeholder( $post_id );
+}
+
+/**
+ * _spc_is_placeholder の追加・更新で確認する。
+ *
+ * @param int    $meta_id  メタID（未使用）。
+ * @param int    $post_id  投稿ID。
+ * @param string $meta_key メタキー。
+ */
+function spc_guard_on_meta( $meta_id, $post_id, $meta_key ): void {
+	if ( '_spc_is_placeholder' === $meta_key ) {
+		spc_unpublish_if_placeholder( (int) $post_id );
+	}
+}
+
+/**
+ * ガードのフックを付ける。
+ */
+function spc_hook_placeholder_guard(): void {
+	add_action( 'wp_after_insert_post', 'spc_guard_after_insert_post', 20 );
+	add_action( 'added_post_meta', 'spc_guard_on_meta', 10, 3 );
+	add_action( 'updated_post_meta', 'spc_guard_on_meta', 10, 3 );
+}
+
+/**
+ * ガードのフックを外す。
+ */
+function spc_unhook_placeholder_guard(): void {
+	remove_action( 'wp_after_insert_post', 'spc_guard_after_insert_post', 20 );
+	remove_action( 'added_post_meta', 'spc_guard_on_meta', 10 );
+	remove_action( 'updated_post_meta', 'spc_guard_on_meta', 10 );
+}
+spc_hook_placeholder_guard();
+
+/**
+ * 下書きに戻した旨を、次の管理画面表示で知らせるために保存する。
+ */
+function spc_queue_placeholder_notice( WP_Post $post ): void {
+	$user_id = get_current_user_id();
+	if ( ! $user_id ) {
+		return;
+	}
+	$key    = 'spc_placeholder_notice_' . $user_id;
+	$titles = get_transient( $key );
+	$titles = is_array( $titles ) ? $titles : array();
+	$title  = '' !== $post->post_title ? $post->post_title : __( '（無題）', 'spc' );
+	set_transient( $key, array_values( array_unique( array_merge( $titles, array( $title ) ) ) ), HOUR_IN_SECONDS );
+}
+
+/**
+ * 保存しておいた通知を一度だけ表示する。
+ */
+function spc_render_placeholder_notice(): void {
+	$user_id = get_current_user_id();
+	if ( ! $user_id ) {
+		return;
+	}
+	$key    = 'spc_placeholder_notice_' . $user_id;
+	$titles = get_transient( $key );
+	if ( ! is_array( $titles ) || ! $titles ) {
+		return;
+	}
+	delete_transient( $key );
+	foreach ( $titles as $title ) {
+		printf(
+			'<div class="notice notice-warning is-dismissible"><p>%s</p></div>',
+			esc_html(
+				sprintf(
+					/* translators: %s: 投稿タイトル */
+					__( '『%s』は仮データのため、本番サイトでは公開できません。下書きに戻しました。内容を差し替えて『仮データ』のチェックを外してから公開してください。', 'spc' ),
+					(string) $title
+				)
+			)
+		);
+	}
+}
+add_action( 'admin_notices', 'spc_render_placeholder_notice' );
+
+/**
+ * サイトヘルスの「公開前チェック」。本番だけ critical にする。
+ *
+ * @return array<string,mixed>
+ */
+function spc_site_health_placeholder(): array {
+	$report = spc_placeholder_report();
+	$result = array(
+		'label'       => __( '仮データは残っていません', 'spc' ),
+		'status'      => 'good',
+		'badge'       => array(
+			'label' => __( '公開前チェック', 'spc' ),
+			'color' => 'blue',
+		),
+		'description' => '<p>' . esc_html__( '仮の内容は見つかりませんでした。', 'spc' ) . '</p>',
+		'actions'     => '',
+		'test'        => 'spc_placeholder',
+	);
+	if ( ! $report ) {
+		return $result;
+	}
+
+	$items = '';
+	foreach ( $report as $item ) {
+		$items .= '<li><a href="' . esc_url( $item['edit_url'] ) . '">' . esc_html( $item['label'] ) . '</a></li>';
+	}
+	$production            = spc_is_production();
+	$result['status']      = $production ? 'critical' : 'recommended';
+	$result['label']       = __( '仮データが残っています', 'spc' );
+	$result['description'] = '<p>' . esc_html(
+		$production
+			? __( '本番サイトの公開前に、次の仮データを差し替えてください。', 'spc' )
+			: __( '制作中のため仮データがあります。本番に移す前に差し替えてください。', 'spc' )
+	) . '</p><ul>' . $items . '</ul>';
+	return $result;
+}
+
+/**
+ * サイトヘルスにテストを登録する。
+ *
+ * @param array<string,mixed> $tests 既存のテスト。
+ * @return array<string,mixed>
+ */
+function spc_register_site_health_test( array $tests ): array {
+	$tests['direct']['spc_placeholder'] = array(
+		'label' => __( '公開前チェック（仮データ）', 'spc' ),
+		'test'  => 'spc_site_health_placeholder',
+	);
+	return $tests;
+}
+add_filter( 'site_status_tests', 'spc_register_site_health_test' );
+
+/**
+ * 管理バーに「仮データ N件」を出す（投稿を編集できるユーザーのみ）。
+ */
+function spc_admin_bar_placeholder( WP_Admin_Bar $bar ): void {
+	if ( ! current_user_can( 'edit_posts' ) ) {
+		return;
+	}
+	$count = count( spc_placeholder_report() );
+	if ( $count < 1 ) {
+		return;
+	}
+	$bar->add_node(
+		array(
+			'id'    => 'spc-placeholder',
+			'title' => sprintf( /* translators: %d: 件数 */ __( '仮データ %d件', 'spc' ), $count ),
+			'href'  => spc_settings_page_url(),
+		)
+	);
+}
+add_action( 'admin_bar_menu', 'spc_admin_bar_placeholder', 100 );

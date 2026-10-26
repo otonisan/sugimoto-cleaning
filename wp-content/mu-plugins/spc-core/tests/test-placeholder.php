@@ -1,0 +1,237 @@
+<?php
+class Test_Placeholder extends WP_UnitTestCase {
+	public function tear_down() {
+		remove_all_filters( 'spc_is_production' );
+		delete_option( 'spc_settings' );
+		parent::tear_down();
+	}
+
+	private function production(): void {
+		add_filter( 'spc_is_production', '__return_true' );
+	}
+
+	private function good_settings(): void {
+		update_option(
+			'spc_settings',
+			array(
+				'brand_name' => '杉本ブランド',
+				'line_url'   => 'https://lin.ee/abc123',
+				'gtm_id'     => 'GTM-AB12CD',
+			)
+		);
+	}
+
+	private function admin(): int {
+		$id = self::factory()->user->create( array( 'role' => 'administrator' ) );
+		wp_set_current_user( $id );
+		return $id;
+	}
+
+	public function test_is_production_follows_environment_and_filter() {
+		$this->assertSame( 'production' === wp_get_environment_type(), spc_is_production() );
+		$this->production();
+		$this->assertTrue( spc_is_production() );
+		remove_all_filters( 'spc_is_production' );
+		add_filter( 'spc_is_production', '__return_false' );
+		$this->assertFalse( spc_is_production() );
+	}
+
+	public function test_is_placeholder_accepts_id_and_post() {
+		$id = self::factory()->post->create( array( 'post_type' => 'spc_case' ) );
+		$this->assertFalse( spc_is_placeholder( $id ) );
+		update_post_meta( $id, '_spc_is_placeholder', '1' );
+		$this->assertTrue( spc_is_placeholder( $id ) );
+		$this->assertTrue( spc_is_placeholder( get_post( $id ) ) );
+		$this->assertFalse( spc_is_placeholder( 999999 ) );
+	}
+
+	public function test_production_reverts_placeholder_publish_to_draft() {
+		$this->production();
+		$id = self::factory()->post->create( array( 'post_type' => 'spc_case', 'post_status' => 'draft' ) );
+		update_post_meta( $id, '_spc_is_placeholder', '1' );
+		wp_update_post( array( 'ID' => $id, 'post_status' => 'publish' ) );
+		$this->assertSame( 'draft', get_post_status( $id ) );
+	}
+
+	public function test_non_production_allows_placeholder_publish() {
+		add_filter( 'spc_is_production', '__return_false' );
+		$id = self::factory()->post->create( array( 'post_type' => 'spc_case', 'post_status' => 'draft' ) );
+		update_post_meta( $id, '_spc_is_placeholder', '1' );
+		wp_update_post( array( 'ID' => $id, 'post_status' => 'publish' ) );
+		$this->assertSame( 'publish', get_post_status( $id ) );
+	}
+
+	public function test_marking_published_post_as_placeholder_in_production_unpublishes() {
+		$this->production();
+		$id = self::factory()->post->create( array( 'post_type' => 'spc_faq', 'post_status' => 'publish' ) );
+		$this->assertSame( 'publish', get_post_status( $id ) );
+		update_post_meta( $id, '_spc_is_placeholder', '1' ); // 追加の経路
+		$this->assertSame( 'draft', get_post_status( $id ) );
+
+		wp_update_post( array( 'ID' => $id, 'post_status' => 'publish' ) );
+		delete_post_meta( $id, '_spc_is_placeholder' );
+		wp_update_post( array( 'ID' => $id, 'post_status' => 'publish' ) );
+		$this->assertSame( 'publish', get_post_status( $id ) );
+		update_post_meta( $id, '_spc_is_placeholder', '0' );
+		update_post_meta( $id, '_spc_is_placeholder', '1' ); // 更新の経路
+		$this->assertSame( 'draft', get_post_status( $id ) );
+	}
+
+	public function test_insert_with_placeholder_meta_input_ends_as_draft() {
+		$this->production();
+		$id = self::factory()->post->create(
+			array( 'post_type' => 'spc_price', 'post_status' => 'publish', 'meta_input' => array( '_spc_is_placeholder' => '1' ) )
+		);
+		$this->assertSame( 'draft', get_post_status( $id ) );
+	}
+
+	public function test_other_post_types_are_untouched() {
+		$this->production();
+		$id = self::factory()->post->create( array( 'post_type' => 'post', 'post_status' => 'publish' ) );
+		update_post_meta( $id, '_spc_is_placeholder', '1' );
+		$this->assertSame( 'publish', get_post_status( $id ) );
+	}
+
+	public function test_revert_reattaches_hooks_and_notifies_once() {
+		$this->production();
+		$uid = $this->admin();
+		$id  = self::factory()->post->create( array( 'post_type' => 'spc_case', 'post_title' => '赤ワイン', 'post_status' => 'draft' ) );
+		update_post_meta( $id, '_spc_is_placeholder', '1' );
+		wp_update_post( array( 'ID' => $id, 'post_status' => 'publish' ) );
+		$this->assertSame( 'draft', get_post_status( $id ) );
+		$this->assertNotFalse( has_action( 'wp_after_insert_post', 'spc_guard_after_insert_post' ) );
+		$this->assertNotFalse( has_action( 'added_post_meta', 'spc_guard_on_meta' ) );
+		$this->assertNotFalse( has_action( 'updated_post_meta', 'spc_guard_on_meta' ) );
+		$this->assertSame( array( '赤ワイン' ), get_transient( 'spc_placeholder_notice_' . $uid ) );
+	}
+
+	public function test_notice_renders_once_then_clears() {
+		$uid = $this->admin();
+		set_transient( 'spc_placeholder_notice_' . $uid, array( '<b>事例</b>' ), 60 );
+		ob_start();
+		spc_render_placeholder_notice();
+		$html = ob_get_clean();
+		$this->assertStringContainsString( 'notice-warning', $html );
+		$this->assertStringContainsString( '『&lt;b&gt;事例&lt;/b&gt;』は仮データのため、本番サイトでは公開できません。下書きに戻しました。内容を差し替えて『仮データ』のチェックを外してから公開してください。', $html );
+		$this->assertFalse( get_transient( 'spc_placeholder_notice_' . $uid ) );
+		ob_start();
+		spc_render_placeholder_notice();
+		$this->assertSame( '', ob_get_clean() );
+	}
+
+	public function test_query_args_exclude_placeholder_only_in_production() {
+		$real = self::factory()->post->create( array( 'post_type' => 'spc_case', 'post_status' => 'publish' ) );
+		$fake = self::factory()->post->create( array( 'post_type' => 'spc_case', 'post_status' => 'publish' ) );
+		$zero = self::factory()->post->create( array( 'post_type' => 'spc_case', 'post_status' => 'publish' ) );
+		update_post_meta( $fake, '_spc_is_placeholder', '1' );
+		update_post_meta( $zero, '_spc_is_placeholder', '0' );
+
+		add_filter( 'spc_is_production', '__return_false' );
+		$this->assertCount( 3, get_posts( spc_query_args( 'spc_case', array( 'posts_per_page' => -1 ) ) ) );
+
+		remove_all_filters( 'spc_is_production' );
+		$this->production();
+		$ids = wp_list_pluck( get_posts( spc_query_args( 'spc_case', array( 'posts_per_page' => -1 ) ) ), 'ID' );
+		sort( $ids );
+		$this->assertSame( array( $real, $zero ), $ids );
+	}
+
+	public function test_query_args_keep_caller_meta_query_and_set_default_order() {
+		$this->production();
+		$args = spc_query_args( 'spc_case', array( 'meta_query' => array( array( 'key' => 'x', 'value' => '1' ) ) ) );
+		$this->assertSame( 'date', $args['orderby'] );
+		$this->assertSame( 'DESC', $args['order'] );
+		$this->assertSame( 'spc_case', $args['post_type'] );
+		$this->assertSame( 'publish', $args['post_status'] );
+		$this->assertSame( 'AND', $args['meta_query']['relation'] );
+		$this->assertSame( 'x', $args['meta_query'][0][0]['key'] );
+
+		$faq = spc_query_args( 'spc_faq', array( 'order' => 'DESC' ) );
+		$this->assertSame( 'menu_order', $faq['orderby'] );
+		$this->assertSame( 'DESC', $faq['order'] );
+		$this->assertSame( 'ASC', spc_query_args( 'spc_faq' )['order'] );
+	}
+
+	public function test_query_args_orders_faq_by_menu_order() {
+		$b = self::factory()->post->create( array( 'post_type' => 'spc_faq', 'menu_order' => 2 ) );
+		$a = self::factory()->post->create( array( 'post_type' => 'spc_faq', 'menu_order' => 1 ) );
+		$this->assertSame( array( $a, $b ), wp_list_pluck( get_posts( spc_query_args( 'spc_faq', array( 'posts_per_page' => -1 ) ) ), 'ID' ) );
+	}
+
+	public function test_report_lists_all_issue_types() {
+		delete_option( 'spc_settings' );
+		$types = wp_list_pluck( spc_placeholder_report(), 'type' );
+		foreach ( array( 'line_url', 'brand_name', 'gtm_id' ) as $t ) {
+			$this->assertContains( $t, $types );
+		}
+		foreach ( spc_placeholder_report() as $item ) {
+			$this->assertStringContainsString( 'page=spc-settings', $item['edit_url'] );
+		}
+	}
+
+	public function test_report_empty_when_everything_set() {
+		$this->good_settings();
+		$this->assertSame( array(), spc_placeholder_report() );
+	}
+
+	public function test_report_includes_placeholder_posts_with_labels() {
+		$this->good_settings();
+		$this->admin();
+		$id = self::factory()->post->create( array( 'post_type' => 'spc_case', 'post_title' => '（仮）ウールコートの赤ワインのシミ', 'post_status' => 'draft' ) );
+		update_post_meta( $id, '_spc_is_placeholder', '1' );
+		$report = spc_placeholder_report();
+		$this->assertCount( 1, $report );
+		$this->assertSame( 'post', $report[0]['type'] );
+		$this->assertSame( '仮データの投稿：（仮）ウールコートの赤ワインのシミ（施工事例）', $report[0]['label'] );
+		$this->assertStringContainsString( 'post=' . $id, $report[0]['edit_url'] );
+	}
+
+	public function test_report_flags_brand_name_with_fullwidth_marker_only() {
+		update_option( 'spc_settings', array( 'brand_name' => '（仮）名', 'line_url' => 'https://lin.ee/a', 'gtm_id' => 'GTM-AB12CD' ) );
+		$this->assertSame( array( 'brand_name' ), wp_list_pluck( spc_placeholder_report(), 'type' ) );
+		$this->assertSame( 'ブランド名に『（仮）』が含まれています', spc_placeholder_report()[0]['label'] );
+	}
+
+	public function test_site_health_status_by_environment() {
+		add_filter( 'spc_is_production', '__return_false' );
+		delete_option( 'spc_settings' );
+		$this->assertSame( 'recommended', spc_site_health_placeholder()['status'] );
+		remove_all_filters( 'spc_is_production' );
+		$this->production();
+		$r = spc_site_health_placeholder();
+		$this->assertSame( 'critical', $r['status'] );
+		$this->assertStringContainsString( 'LINE追加URLが仮のままです', $r['description'] );
+		$this->assertStringContainsString( 'page=spc-settings', $r['description'] );
+		$this->good_settings();
+		$this->assertSame( 'good', spc_site_health_placeholder()['status'] );
+	}
+
+	public function test_site_health_test_is_registered_as_direct() {
+		$tests = apply_filters( 'site_status_tests', array( 'direct' => array(), 'async' => array() ) );
+		$this->assertSame( 'spc_site_health_placeholder', $tests['direct']['spc_placeholder']['test'] );
+		$this->assertSame( '公開前チェック（仮データ）', $tests['direct']['spc_placeholder']['label'] );
+	}
+
+	private function bar(): WP_Admin_Bar {
+		require_once ABSPATH . WPINC . '/class-wp-admin-bar.php';
+		$bar = new WP_Admin_Bar();
+		spc_admin_bar_placeholder( $bar );
+		return $bar;
+	}
+
+	public function test_admin_bar_node_only_when_items_and_capability() {
+		delete_option( 'spc_settings' ); // 3件
+		$this->admin();
+		$node = $this->bar()->get_node( 'spc-placeholder' );
+		$this->assertNotNull( $node );
+		$this->assertSame( '仮データ 3件', $node->title );
+		$this->assertStringContainsString( 'page=spc-settings', $node->href );
+
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'subscriber' ) ) );
+		$this->assertNull( $this->bar()->get_node( 'spc-placeholder' ) );
+
+		$this->admin();
+		$this->good_settings();
+		$this->assertNull( $this->bar()->get_node( 'spc-placeholder' ) );
+	}
+}
