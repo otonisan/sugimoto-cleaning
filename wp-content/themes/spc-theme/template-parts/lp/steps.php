@@ -28,7 +28,7 @@ $spc_photo_examples = array(
 	<div class="spc-container">
 		<h2 id="spc-steps-title" class="spc-steps__title"><?php esc_html_e( '写真で相談する3つのステップ', 'spc' ); ?></h2>
 		<?php // TODO(仮): 文言は依頼元確認後に確定（各ステップの説明文） ?>
-		<ol class="spc-steps__list">
+		<ol class="spc-steps__list" role="list">
 			<li class="spc-steps__item">
 				<span class="spc-steps__num" aria-hidden="true">1</span>
 				<h3 class="spc-steps__heading"><?php esc_html_e( 'LINEで友だち追加', 'spc' ); ?></h3>
@@ -38,7 +38,7 @@ $spc_photo_examples = array(
 				<span class="spc-steps__num" aria-hidden="true">2</span>
 				<h3 class="spc-steps__heading"><?php esc_html_e( '衣類全体・シミの接写・洗濯表示の写真を送る', 'spc' ); ?></h3>
 				<p class="spc-steps__text"><?php esc_html_e( '明るい場所で撮影してください。シミが付いてからの期間や、ご自身で処理したかどうかも書き添えていただくと、判断の助けになります。', 'spc' ); ?></p>
-				<ul class="spc-steps__photos" aria-label="<?php esc_attr_e( '送っていただく写真の例', 'spc' ); ?>">
+				<ul class="spc-steps__photos" role="list" aria-label="<?php esc_attr_e( '送っていただく写真の例', 'spc' ); ?>">
 					<?php foreach ( $spc_photo_examples as $spc_example ) : ?>
 						<li class="spc-steps__photo">
 							<span class="spc-steps__frame spc-steps__frame--<?php echo esc_attr( $spc_example['shape'] ); ?>" aria-hidden="true"><span></span></span>

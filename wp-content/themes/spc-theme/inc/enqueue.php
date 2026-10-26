@@ -34,6 +34,17 @@ function spc_enqueue_assets(): void {
 	// LP の部品はトップだけで読み込む。
 	if ( is_front_page() ) {
 		wp_enqueue_style( 'spc-lp', get_theme_file_uri( 'assets/css/lp.css' ), array( 'spc-style' ), spc_asset_version( 'assets/css/lp.css' ) );
+		// 施工事例の施工前／施工後の切り替え（JSが無くても両方の写真が見える）。
+		wp_enqueue_script(
+			'spc-before-after',
+			get_theme_file_uri( 'assets/js/before-after.js' ),
+			array(),
+			spc_asset_version( 'assets/js/before-after.js' ),
+			array(
+				'in_footer' => true,
+				'strategy'  => 'defer',
+			)
+		);
 	}
 }
 add_action( 'wp_enqueue_scripts', 'spc_enqueue_assets' );

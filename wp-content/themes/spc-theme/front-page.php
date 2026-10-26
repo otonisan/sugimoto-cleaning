@@ -12,9 +12,12 @@ get_template_part( 'template-parts/lp/hero' );     // 1 ファーストビュー
 get_template_part( 'template-parts/lp/concerns' ); // 2 悩みと、当店の考え方
 get_template_part( 'template-parts/lp/steps' );    // 3 写真相談の3ステップ
 get_template_part( 'template-parts/lp/menu' );     // 4 対応メニュー
-
-// ここに sitemap.md §3 の 5〜11 を続ける（Task 9）：
-// cases（施工事例）→ craftsmen（職人と施工母体）→ price（料金の目安）→ shipping-flow（全国宅配の流れ）
-// → limits（お引き受けできない場合）→ faq（FAQ抜粋）→ final-cta（最終CTA）
+get_template_part( 'template-parts/lp/cases' );         // 5 施工事例（0件なら出さない）
+get_template_part( 'template-parts/lp/craftsmen' );     // 6 職人と施工母体（LPで唯一の墨地）
+get_template_part( 'template-parts/lp/price' );         // 7 料金の目安（0件なら出さない）
+get_template_part( 'template-parts/lp/shipping-flow' ); // 8 全国宅配の流れ
+get_template_part( 'template-parts/lp/limits' );        // 9 お引き受けできない場合
+get_template_part( 'template-parts/lp/faq' );           // 10 FAQ抜粋（0件なら出さない）
+get_template_part( 'template-parts/lp/final-cta' );     // 11 最終CTA
 
 get_footer();

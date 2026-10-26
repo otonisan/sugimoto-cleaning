@@ -161,6 +161,11 @@ a:hover {
 	color: var(--color-paper);
 }
 
+/* 墨地の上のリンクは白（墨色のままだと読めない）。CTAは spc-cta--inverse が受け持つ */
+.spc-section--sumi a:not(.spc-cta) {
+	color: var(--color-paper);
+}
+
 /* 本文の行長とリード文 */
 .spc-measure {
 	max-width: var(--measure);

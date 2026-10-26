@@ -100,9 +100,12 @@ test.describe('トップLP前半（FV・考え方・3ステップ・メニュー
       return { name: s.animationName, duration: s.animationDuration, timing: s.animationTimingFunction };
     });
     expect(anim).toEqual({ name: 'spc-hero-focus', duration: '0.9s', timing: 'ease-out' });
-    // 動きはFV画像の1か所だけ。
+    // 自動で動くのはFV画像の1か所だけ。
+    // 操作したときだけ動くもの（CTAのホバー、施工事例の施工前／施工後の切り替え [data-spc-ba] など）は数えない。
     const animated = await page.evaluate(() =>
-      [...document.querySelectorAll('body *')].filter((el) => getComputedStyle(el).animationName !== 'none').length,
+      [...document.querySelectorAll('body *')].filter(
+        (el) => getComputedStyle(el).animationName !== 'none' && !el.closest('[data-spc-ba]'),
+      ).length,
     );
     expect(animated).toBe(1);
 

@@ -32,7 +32,7 @@ $spc_menu_items = array(
 <section class="spc-section spc-menu" aria-labelledby="spc-menu-title">
 	<div class="spc-container">
 		<h2 id="spc-menu-title" class="spc-menu__title"><?php esc_html_e( 'ご相談いただける衣類と汚れ', 'spc' ); ?></h2>
-		<ul class="spc-menu__list">
+		<ul class="spc-menu__list" role="list">
 			<?php foreach ( $spc_menu_items as $spc_item ) : ?>
 				<li class="spc-menu__item">
 					<div class="spc-menu__media">

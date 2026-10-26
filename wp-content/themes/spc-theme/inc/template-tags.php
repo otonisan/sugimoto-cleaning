@@ -154,6 +154,53 @@ function spc_default_menu_items( string $location ): array {
 }
 
 /**
+ * 料金の表示（15000, true → 「15,000円〜」、0 → 「お見積り」）。
+ *
+ * @param int  $amount 目安金額（円）。0 以下は未設定として扱う。
+ * @param bool $from   true なら末尾に「〜」を付ける。
+ */
+function spc_format_price( int $amount, bool $from ): string {
+	if ( $amount <= 0 ) {
+		return __( 'お見積り', 'spc' );
+	}
+	return number_format( $amount ) . '円' . ( $from ? '〜' : '' );
+}
+
+/**
+ * spc-core のクエリ引数（本番では仮データを除外）で WP_Query を作る。
+ * 0件、または spc-core が無いときは null を返す（呼び出し側はセクションごと出さない）。
+ * ループのあとは wp_reset_postdata() を呼ぶこと。
+ *
+ * @param string              $post_type 投稿タイプ。
+ * @param array<string,mixed> $args      追加の引数。
+ */
+function spc_lp_query( string $post_type, array $args = array() ): ?WP_Query {
+	if ( ! function_exists( 'spc_query_args' ) ) {
+		return null;
+	}
+	$query = new WP_Query( spc_query_args( $post_type, $args + array( 'no_found_rows' => true ) ) );
+	return $query->have_posts() ? $query : null;
+}
+
+/**
+ * トップのFAQ（「トップに表示」付き・最大5件）。FAQセクションと構造化データで同じものを使う。
+ */
+function spc_top_faq_query(): ?WP_Query {
+	return spc_lp_query(
+		'spc_faq',
+		array(
+			'posts_per_page' => 5,
+			'meta_query'     => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
+				array(
+					'key'   => 'spc_show_on_top',
+					'value' => '1',
+				),
+			),
+		)
+	);
+}
+
+/**
  * メニュー位置を出力する（未設定なら固定リンク）。
  */
 function spc_nav_menu( string $location ): void {

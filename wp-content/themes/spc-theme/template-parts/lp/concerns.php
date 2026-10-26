@@ -16,7 +16,7 @@ $spc_concerns = array(
 	<div class="spc-container spc-concerns__inner">
 		<?php // 折り返しは「、」の後ろだけ（wbr と word-break: keep-all）。 ?>
 		<h2 id="spc-concerns-title" class="spc-concerns__title"><?php esc_html_e( '他店で落ちなかったシミ、', 'spc' ); ?><wbr><?php esc_html_e( 'ご相談ください。', 'spc' ); ?></h2>
-		<ul class="spc-concerns__list">
+		<ul class="spc-concerns__list" role="list">
 			<?php foreach ( $spc_concerns as $spc_concern ) : ?>
 				<li class="spc-concerns__item"><?php echo esc_html( $spc_concern ); ?></li>
 			<?php endforeach; ?>
