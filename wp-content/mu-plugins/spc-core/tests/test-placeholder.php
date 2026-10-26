@@ -186,6 +186,25 @@ class Test_Placeholder extends WP_UnitTestCase {
 		$this->assertStringContainsString( 'post=' . $id, $report[0]['edit_url'] );
 	}
 
+	public function test_report_includes_placeholder_pages_but_not_plain_pages() {
+		$this->good_settings();
+		$this->admin();
+		self::factory()->post->create( array( 'post_type' => 'page', 'post_title' => '通常ページ' ) );
+		$page = self::factory()->post->create( array( 'post_type' => 'page', 'post_title' => '料金・送料' ) );
+		update_post_meta( $page, '_spc_is_placeholder', '1' );
+		$report = spc_placeholder_report();
+		$this->assertCount( 1, $report );
+		$this->assertSame( '仮データの投稿：料金・送料（固定ページ）', $report[0]['label'] );
+		$this->assertStringContainsString( 'post=' . $page, $report[0]['edit_url'] );
+	}
+
+	public function test_publish_guard_does_not_touch_pages() {
+		$this->production();
+		$id = self::factory()->post->create( array( 'post_type' => 'page', 'post_status' => 'publish' ) );
+		update_post_meta( $id, '_spc_is_placeholder', '1' );
+		$this->assertSame( 'publish', get_post_status( $id ) );
+	}
+
 	private function placeholder_case( string $title ): int {
 		add_filter( 'spc_is_production', '__return_false' );
 		$id = self::factory()->post->create( array( 'post_type' => 'spc_case', 'post_title' => $title, 'post_status' => 'publish' ) );

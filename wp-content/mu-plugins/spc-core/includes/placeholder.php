@@ -131,7 +131,7 @@ function spc_placeholder_report(): array {
 
 	$posts = get_posts(
 		array(
-			'post_type'              => spc_post_types(),
+			'post_type'              => array_merge( spc_post_types(), array( 'page' ) ), // 固定ページも対象（公開ガードは対象外）
 			'post_status'            => array( 'publish', 'future', 'draft', 'pending', 'private' ),
 			'posts_per_page'         => -1,
 			'orderby'                => 'ID',
@@ -148,8 +148,8 @@ function spc_placeholder_report(): array {
 		$report[] = array(
 			'type'     => 'post',
 			/* translators: 1: 投稿タイトル 2: 投稿の種類 */
-			'label'    => sprintf( __( '仮データの投稿：%1$s（%2$s）', 'spc' ), $title, $type_obj ? $type_obj->labels->singular_name : $post->post_type ),
-			'edit_url' => (string) get_edit_post_link( $post->ID, 'raw' ),
+			'label'    => sprintf( __( '仮データの投稿：%1$s（%2$s）', 'spc' ), $title, 'page' === $post->post_type ? __( '固定ページ', 'spc' ) : ( $type_obj ? $type_obj->labels->singular_name : $post->post_type ) ),
+			'edit_url' => admin_url( 'post.php?post=' . $post->ID . '&action=edit' ), // CLIなど未ログインでも出す
 		);
 	}
 
