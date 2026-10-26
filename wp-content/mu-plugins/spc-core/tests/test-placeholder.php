@@ -120,13 +120,13 @@ class Test_Placeholder extends WP_UnitTestCase {
 	}
 
 	public function test_query_args_exclude_placeholder_only_in_production() {
+		add_filter( 'spc_is_production', '__return_false' );
 		$real = self::factory()->post->create( array( 'post_type' => 'spc_case', 'post_status' => 'publish' ) );
 		$fake = self::factory()->post->create( array( 'post_type' => 'spc_case', 'post_status' => 'publish' ) );
 		$zero = self::factory()->post->create( array( 'post_type' => 'spc_case', 'post_status' => 'publish' ) );
 		update_post_meta( $fake, '_spc_is_placeholder', '1' );
 		update_post_meta( $zero, '_spc_is_placeholder', '0' );
 
-		add_filter( 'spc_is_production', '__return_false' );
 		$this->assertCount( 3, get_posts( spc_query_args( 'spc_case', array( 'posts_per_page' => -1 ) ) ) );
 
 		remove_all_filters( 'spc_is_production' );
@@ -184,6 +184,69 @@ class Test_Placeholder extends WP_UnitTestCase {
 		$this->assertSame( 'post', $report[0]['type'] );
 		$this->assertSame( '仮データの投稿：（仮）ウールコートの赤ワインのシミ（施工事例）', $report[0]['label'] );
 		$this->assertStringContainsString( 'post=' . $id, $report[0]['edit_url'] );
+	}
+
+	private function placeholder_case( string $title ): int {
+		add_filter( 'spc_is_production', '__return_false' );
+		$id = self::factory()->post->create( array( 'post_type' => 'spc_case', 'post_title' => $title, 'post_status' => 'publish' ) );
+		update_post_meta( $id, '_spc_is_placeholder', '1' );
+		remove_all_filters( 'spc_is_production' );
+		return $id;
+	}
+
+	public function test_production_front_archive_hides_published_placeholder_cases() {
+		$fake = $this->placeholder_case( '（仮）事例' );
+		$real = self::factory()->post->create( array( 'post_type' => 'spc_case', 'post_status' => 'publish' ) );
+
+		add_filter( 'spc_is_production', '__return_false' );
+		$this->go_to( get_post_type_archive_link( 'spc_case' ) );
+		$this->assertEqualSets( array( $fake, $real ), wp_list_pluck( $GLOBALS['wp_query']->posts, 'ID' ) );
+
+		remove_all_filters( 'spc_is_production' );
+		$this->production();
+		$this->go_to( get_post_type_archive_link( 'spc_case' ) );
+		$this->assertSame( array( $real ), wp_list_pluck( $GLOBALS['wp_query']->posts, 'ID' ) );
+	}
+
+	public function test_production_placeholder_case_single_is_404() {
+		$fake = $this->placeholder_case( '（仮）事例' );
+		$this->production();
+		$this->go_to( get_permalink( $fake ) );
+		$this->assertTrue( is_404() );
+
+		remove_all_filters( 'spc_is_production' );
+		add_filter( 'spc_is_production', '__return_false' );
+		$this->go_to( get_permalink( $fake ) );
+		$this->assertTrue( is_singular( 'spc_case' ) );
+	}
+
+	public function test_production_guard_leaves_secondary_queries_alone() {
+		$fake = $this->placeholder_case( '（仮）事例' );
+		$this->production();
+		$q = new WP_Query( array( 'post_type' => 'spc_case', 'fields' => 'ids' ) );
+		$this->assertSame( array( $fake ), $q->posts );
+	}
+
+	public function test_production_sitemap_query_args_exclude_placeholders() {
+		$fake = $this->placeholder_case( '（仮）事例' );
+		$real = self::factory()->post->create( array( 'post_type' => 'spc_case', 'post_status' => 'publish' ) );
+		$page = self::factory()->post->create( array( 'post_type' => 'page', 'post_status' => 'publish' ) );
+		update_post_meta( $page, '_spc_is_placeholder', '1' );
+
+		$ids_for = function ( string $type ): array {
+			$args = apply_filters( 'wp_sitemaps_posts_query_args', array( 'post_type' => $type, 'fields' => 'ids', 'posts_per_page' => -1, 'post_status' => 'publish' ), $type );
+			return get_posts( $args );
+		};
+
+		add_filter( 'spc_is_production', '__return_false' );
+		$this->assertContains( $fake, $ids_for( 'spc_case' ) );
+		remove_all_filters( 'spc_is_production' );
+
+		$this->production();
+		$cases = $ids_for( 'spc_case' );
+		$this->assertContains( $real, $cases );
+		$this->assertNotContains( $fake, $cases );
+		$this->assertNotContains( $page, $ids_for( 'page' ) );
 	}
 
 	public function test_report_flags_brand_name_with_fullwidth_marker_only() {

@@ -23,6 +23,72 @@ function spc_is_placeholder( $post ): bool {
 }
 
 /**
+ * 仮データ（'1'）以外、またはメタなしだけを通す meta_query 句。
+ *
+ * @return array<int|string,mixed>
+ */
+function spc_placeholder_meta_guard(): array {
+	return array(
+		'relation' => 'OR',
+		array(
+			'key'     => '_spc_is_placeholder',
+			'compare' => 'NOT EXISTS',
+		),
+		array(
+			'key'     => '_spc_is_placeholder',
+			'value'   => '1',
+			'compare' => '!=',
+		),
+	);
+}
+
+/**
+ * 既存の meta_query に仮データ除外の句を AND で足す。
+ *
+ * @param array<string,mixed> $args クエリ引数。
+ * @return array<string,mixed>
+ */
+function spc_add_placeholder_guard( array $args ): array {
+	$guard = spc_placeholder_meta_guard();
+	if ( ! empty( $args['meta_query'] ) && is_array( $args['meta_query'] ) ) {
+		$args['meta_query'] = array( 'relation' => 'AND', $args['meta_query'], $guard );
+	} else {
+		$args['meta_query'] = $guard;
+	}
+	return $args;
+}
+
+/**
+ * 本番ではフロントのメインクエリ（事例）から公開済みの仮データを除く。管理画面は対象外。
+ */
+function spc_exclude_placeholder_from_main_query( WP_Query $query ): void {
+	if ( is_admin() || ! $query->is_main_query() || ! spc_is_production() ) {
+		return;
+	}
+	$types = (array) $query->get( 'post_type' );
+	if ( ! in_array( 'spc_case', $types, true ) && ! $query->is_post_type_archive( 'spc_case' ) && ! ( $query->is_search() && '' === (string) $query->get( 'post_type' ) ) ) {
+		return;
+	}
+	$query->set( 'meta_query', spc_add_placeholder_guard( array( 'meta_query' => $query->get( 'meta_query' ) ) )['meta_query'] );
+}
+add_action( 'pre_get_posts', 'spc_exclude_placeholder_from_main_query' );
+
+/**
+ * 本番ではサイトマップ（事例・固定ページ）から仮データを除く。
+ *
+ * @param array<string,mixed> $args      クエリ引数。
+ * @param string              $post_type 投稿タイプ。
+ * @return array<string,mixed>
+ */
+function spc_exclude_placeholder_from_sitemap( array $args, $post_type ): array {
+	if ( spc_is_production() && in_array( $post_type, array( 'spc_case', 'page' ), true ) ) {
+		$args = spc_add_placeholder_guard( $args );
+	}
+	return $args;
+}
+add_filter( 'wp_sitemaps_posts_query_args', 'spc_exclude_placeholder_from_sitemap', 10, 2 );
+
+/**
  * フロント表示用のクエリ引数。本番では仮データを除外し、並び順の既定値を入れる。
  *
  * @param array<string,mixed> $args 呼び出し側の指定（既定値より優先）。
@@ -42,24 +108,7 @@ function spc_query_args( string $post_type, array $args = array() ): array {
 	$args['post_type'] = $post_type;
 
 	if ( spc_is_production() ) {
-		// 仮データ（'1'）以外、またはメタなしだけを通す。
-		$guard = array(
-			'relation' => 'OR',
-			array(
-				'key'     => '_spc_is_placeholder',
-				'compare' => 'NOT EXISTS',
-			),
-			array(
-				'key'     => '_spc_is_placeholder',
-				'value'   => '1',
-				'compare' => '!=',
-			),
-		);
-		if ( ! empty( $args['meta_query'] ) && is_array( $args['meta_query'] ) ) {
-			$args['meta_query'] = array( 'relation' => 'AND', $args['meta_query'], $guard );
-		} else {
-			$args['meta_query'] = $guard;
-		}
+		$args = spc_add_placeholder_guard( $args );
 	}
 
 	return $args;
