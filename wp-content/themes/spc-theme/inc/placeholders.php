@@ -1,8 +1,9 @@
 <?php
 /**
- * テンプレートに直接置いている写真（仮枠）の一覧と、公開前チェックへの登録。
+ * テンプレートに直接置いている写真（仮枠）と仮の文章の一覧と、公開前チェックへの登録。
  * 一覧はここが唯一の定義。テンプレートは spc_theme_image_id() で画像IDを受け取り、
  * 画像がない間は仮枠を出す。同じ一覧を spc-core の公開前チェック（wp spc launch-check・サイトヘルス）にも出す。
+ * 仮の文章は、テンプレートの「TODO(仮)」コメントの末尾に [copy:キー] を付け、spc_theme_placeholder_copy() に登録する。
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -88,3 +89,96 @@ function spc_theme_placeholder_report( $items ): array {
 	return $items;
 }
 add_filter( 'spc_placeholder_report', 'spc_theme_placeholder_report' );
+
+/**
+ * テンプレートに直接書いている仮の文章の一覧（キー => 説明・ファイル・確定済みか）。
+ * キーはテンプレートの「TODO(仮)」コメント末尾の [copy:キー] と対応する（同じファイルの複数か所は1キー）。
+ * 依頼元の確認が済んだら、文章を差し替えて confirmed を true にする（コメントも消してよい）。
+ *
+ * @return array<string,array{label:string,file:string,confirmed:bool}>
+ */
+function spc_theme_placeholder_copy(): array {
+	$copy = array(
+		'lp.concerns'      => array(
+			'label'     => __( 'トップ「悩みと、当店の考え方」', 'spc' ),
+			'file'      => 'template-parts/lp/concerns.php',
+			'confirmed' => false,
+		),
+		'lp.steps'         => array(
+			'label'     => __( 'トップ「写真相談の3ステップ」', 'spc' ),
+			'file'      => 'template-parts/lp/steps.php',
+			'confirmed' => false,
+		),
+		'lp.menu'          => array(
+			'label'     => __( 'トップ「対応メニュー」', 'spc' ),
+			'file'      => 'template-parts/lp/menu.php',
+			'confirmed' => false,
+		),
+		'lp.cases'         => array(
+			'label'     => __( '施工事例のセクション（導入文）', 'spc' ),
+			'file'      => 'template-parts/sections/cases.php',
+			'confirmed' => false,
+		),
+		'lp.craftsmen'     => array(
+			'label'     => __( 'トップ「職人と施工母体」', 'spc' ),
+			'file'      => 'template-parts/lp/craftsmen.php',
+			'confirmed' => false,
+		),
+		'lp.price-steps'   => array(
+			'label'     => __( '料金の仕組み（3段階の説明）', 'spc' ),
+			'file'      => 'inc/template-tags.php',
+			'confirmed' => false,
+		),
+		'lp.flow'          => array(
+			'label'     => __( '「全国宅配の流れ」', 'spc' ),
+			'file'      => 'template-parts/sections/flow.php',
+			'confirmed' => false,
+		),
+		'lp.limits'        => array(
+			'label'     => __( '「お引き受けできない場合」', 'spc' ),
+			'file'      => 'template-parts/sections/limits.php',
+			'confirmed' => false,
+		),
+		'lp.final-cta'     => array(
+			'label'     => __( 'トップ「最終CTA」', 'spc' ),
+			'file'      => 'template-parts/lp/final-cta.php',
+			'confirmed' => false,
+		),
+		'common.cta-block' => array(
+			'label'     => __( 'ページ下部の相談ブロック', 'spc' ),
+			'file'      => 'inc/template-tags.php',
+			'confirmed' => false,
+		),
+	);
+
+	/**
+	 * 仮の文章の一覧を差し替える（子テーマ・テスト用）。
+	 *
+	 * @param array<string,array{label:string,file:string,confirmed:bool}> $copy 仮の文章の一覧。
+	 */
+	return (array) apply_filters( 'spc_theme_placeholder_copy', $copy );
+}
+
+/**
+ * 公開前チェック（spc-core のフィルタ spc_placeholder_report）に、仮のままの文章を足す。
+ * 管理画面では直せない（テーマのファイルを直す）ため、edit_url は空にする。
+ *
+ * @param mixed $items 公開前チェックの項目。
+ * @return array<int,array{type:string,label:string,edit_url:string}>
+ */
+function spc_theme_placeholder_copy_report( $items ): array {
+	$items = is_array( $items ) ? $items : array();
+	foreach ( spc_theme_placeholder_copy() as $copy ) {
+		if ( ! empty( $copy['confirmed'] ) ) {
+			continue;
+		}
+		$items[] = array(
+			'type'     => 'theme_copy',
+			/* translators: 1: 文章の場所 2: テーマのファイル */
+			'label'    => sprintf( __( '%1$sの文章が仮のままです（制作側でテーマを差し替え：%2$s）', 'spc' ), (string) $copy['label'], (string) $copy['file'] ),
+			'edit_url' => '',
+		);
+	}
+	return $items;
+}
+add_filter( 'spc_placeholder_report', 'spc_theme_placeholder_copy_report' );

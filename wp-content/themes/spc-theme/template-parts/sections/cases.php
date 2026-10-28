@@ -35,7 +35,7 @@ $spc_tone_class    = 'mist' === $spc_args['tone'] ? ' spc-section--mist' : '';
 	<div class="spc-container">
 		<h2 id="<?php echo esc_attr( (string) $spc_args['heading_id'] ); ?>" class="spc-cases__title"><?php echo esc_html( (string) $spc_args['heading'] ); ?></h2>
 		<?php if ( null === $spc_args['lead'] ) : ?>
-			<?php // TODO(仮): 文言は依頼元確認後に確定 ?>
+			<?php // TODO(仮): 文言は依頼元確認後に確定 [copy:lp.cases] ?>
 			<p class="spc-cases__lead"><?php esc_html_e( '落としきれなかった場合も、仕上がりの欄にそのまま記載しています。', 'spc' ); ?></p>
 		<?php elseif ( '' !== (string) $spc_args['lead'] ) : ?>
 			<p class="spc-cases__lead"><?php echo esc_html( (string) $spc_args['lead'] ); ?></p>

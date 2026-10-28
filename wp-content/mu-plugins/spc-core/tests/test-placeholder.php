@@ -449,6 +449,7 @@ class Test_Placeholder extends WP_UnitTestCase {
 		}
 		require_once $file;
 		add_filter( 'spc_placeholder_report', 'spc_theme_placeholder_report' ); // フックは前のテストの後始末で外れることがある
+		remove_filter( 'spc_placeholder_report', 'spc_theme_placeholder_copy_report' ); // 仮の文章は test-theme-subpages.php で確かめる
 		$this->good_settings();
 
 		$images = spc_theme_placeholder_images();

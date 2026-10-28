@@ -61,12 +61,20 @@
 		});
 	}
 
+	// ページの種類（<body data-page-type>。無ければ other）。
+	function pageType() {
+		return (document.body && document.body.getAttribute('data-page-type')) || 'other';
+	}
+
 	// CTAのクリック（preventDefault はしない）。
 	document.addEventListener('click', function (event) {
 		try {
 			var cta = event.target.closest && event.target.closest('[data-spc-cta]');
 			if (cta) {
-				spcTrack('line_click', { cta_location: cta.getAttribute('data-cta-location') || '' });
+				spcTrack('line_click', {
+					cta_location: cta.getAttribute('data-cta-location') || '',
+					page_type: pageType()
+				});
 			}
 		} catch (e) {}
 	});
@@ -74,7 +82,7 @@
 	storeUtm();
 	applyUtm();
 
-	if (document.body && document.body.getAttribute('data-page-type') === 'lp') {
+	if (pageType() === 'lp') {
 		spcTrack('landing_view', { page_type: 'lp' });
 	}
 })();

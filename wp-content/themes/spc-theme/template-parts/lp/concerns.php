@@ -5,7 +5,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-// TODO(仮): 文言は依頼元確認後に確定（見出し・悩みの3文）
+// TODO(仮): 文言は依頼元確認後に確定（見出し・悩みの3文） [copy:lp.concerns]
 $spc_concerns = array(
 	__( '他店で断られた', 'spc' ),
 	__( '自分で処理したら広がってしまった', 'spc' ),

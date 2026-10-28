@@ -1,0 +1,88 @@
+/*
+ * 下層ページの共通部品（DESIGN.md §4 下層ページ）。トップ以外で読み込む。
+ * パンくず・ページ見出しのリード文・お知らせ・補足・表（会社概要・特商法）。
+ * ページ見出しの余白と罫線は components.css の .spc-page__header。
+ */
+
+/* ---------- パンくず（--text-small・暖灰、区切りは「／」） ---------- */
+.spc-breadcrumbs {
+	margin-bottom: var(--space-24);
+	color: var(--color-stone);
+	font-size: var(--text-small);
+	line-height: var(--leading-small);
+}
+
+.spc-breadcrumbs__list {
+	display: flex;
+	flex-wrap: wrap;
+	padding-left: 0;
+	list-style: none;
+}
+
+.spc-breadcrumbs__item {
+	min-width: 0;
+}
+
+/* 区切りは読み上げない（代替テキストを空にする。未対応のブラウザは1行目を使う） */
+.spc-breadcrumbs__item + .spc-breadcrumbs__item::before {
+	content: "／";
+	content: "／" / "";
+	margin-inline: var(--space-8);
+}
+
+.spc-breadcrumbs a {
+	color: var(--color-stone);
+}
+
+@media (min-width: 768px) {
+	.spc-breadcrumbs {
+		margin-bottom: var(--space-32);
+	}
+}
+
+/* ---------- ページ見出しのリード文（--text-lead、1〜2文） ---------- */
+.spc-page__lead {
+	margin-top: var(--space-16);
+	word-break: auto-phrase;
+}
+
+/* ---------- お知らせ・補足（白地・本文の書式） ---------- */
+.spc-page-notes {
+	background: var(--color-paper);
+}
+
+.spc-page-notes__body {
+	margin-top: var(--space-24);
+}
+
+/* ---------- 表（会社概要・特商法）：横罫線のみ。項目名の列は SP 7em／PC 10em（余白込み）。SP でも横並びのまま折り返す ---------- */
+.spc-table {
+	width: 100%;
+	border-collapse: collapse;
+	border-top: 1px solid var(--color-line);
+	table-layout: fixed;
+	font-variant-numeric: tabular-nums;
+}
+
+.spc-table th,
+.spc-table td {
+	padding: var(--space-16) 0;
+	border-bottom: 1px solid var(--color-line);
+	text-align: left;
+	vertical-align: top;
+	overflow-wrap: anywhere;
+}
+
+.spc-table th {
+	width: 7em;
+	padding-right: var(--space-16);
+	font-weight: 500;
+}
+
+/* 文字の大きさと同じく、768px 以上を PC の値にする */
+@media (min-width: 768px) {
+	.spc-table th {
+		width: 10em;
+		padding-right: var(--space-24);
+	}
+}

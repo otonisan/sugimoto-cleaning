@@ -12,7 +12,7 @@ $spc_qr_id      = function_exists( 'spc_get_setting' ) ? absint( spc_get_setting
 <section class="spc-section spc-section--mist spc-final-cta" aria-labelledby="spc-final-cta-title" data-sticky-hide>
 	<div class="spc-container spc-final-cta__inner">
 		<h2 id="spc-final-cta-title" class="spc-final-cta__title"><?php esc_html_e( '写真を送って、まずはご相談ください', 'spc' ); ?></h2>
-		<?php // TODO(仮): 文言は依頼元確認後に確定 ?>
+		<?php // TODO(仮): 文言は依頼元確認後に確定 [copy:lp.final-cta] ?>
 		<p class="spc-final-cta__text"><?php esc_html_e( '他店で落ちなかったシミのご相談も承ります。落とせる可能性とリスクを、職人が写真を拝見してお伝えします。', 'spc' ); ?></p>
 		<div class="spc-final-cta__action">
 			<?php spc_cta( 'final' ); ?>

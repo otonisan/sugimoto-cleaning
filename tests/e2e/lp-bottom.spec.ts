@@ -1,12 +1,12 @@
 import { test, expect, type Page } from '@playwright/test';
 import { setSpcSetting, wpCli } from './helpers/wp';
+import { NG_WORDS } from './helpers/page-checks';
 
 // 環境が遅いことがあるため、データを書き換えるテストは長めに待つ。
 test.describe.configure({ timeout: 180_000 });
 
 const ROW_LABELS = ['品目', '素材', 'シミ', '他店処理', '処置', '仕上がり', '所要日数'];
 const FLOW_STEPS = ['写真で相談', '発送', '到着・検品', '正式なお見積り', 'ご承認・お支払い', '施工', '返送'];
-const NG_WORDS = ['！', '!', '→', '必ず落ちる', '100%', 'どんなシミも', '完全に元通り', 'No.1', '日本一', '最高級', '今だけ', '残りわずか'];
 
 type JsonLdNode = Record<string, unknown> & { '@type'?: string | string[]; '@id'?: string };
 
@@ -302,9 +302,9 @@ test.describe('トップLP後半（事例・職人・料金・流れ・注意・
       expect(raw, key).not.toContain(`"${key}"`);
     }
 
-    // トップ以外には出さない。
+    // ブランド（DryCleaningOrLaundry）はトップだけ（下層ページは Organization と BreadcrumbList）。
     await page.goto('/price/');
-    await expect(page.locator('script[type="application/ld+json"]')).toHaveCount(0);
+    expect(byType(await jsonLd(page), 'DryCleaningOrLaundry')).toBeUndefined();
   });
 
   test('最終CTA：data-sticky-hide、CTA、返信の目安は設定値、QRは1024px以上だけ', async ({ page }) => {

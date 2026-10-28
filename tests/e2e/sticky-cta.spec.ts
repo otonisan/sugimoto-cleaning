@@ -68,6 +68,6 @@ test.describe('スマホ固定CTA', () => {
     });
     await page.locator('.spc-sticky-cta [data-spc-cta]').click();
     const clicks = await page.evaluate(() => (window as any).dataLayer.filter((e: any) => e.event === 'line_click'));
-    expect(clicks).toEqual([{ event: 'line_click', cta_location: 'sticky' }]);
+    expect(clicks).toEqual([{ event: 'line_click', cta_location: 'sticky', page_type: 'price' }]);
   });
 });

@@ -27,7 +27,7 @@ $spc_photo_examples = array(
 <section class="spc-section spc-section--mist spc-steps" aria-labelledby="spc-steps-title">
 	<div class="spc-container">
 		<h2 id="spc-steps-title" class="spc-steps__title"><?php esc_html_e( '写真で相談する3つのステップ', 'spc' ); ?></h2>
-		<?php // TODO(仮): 文言は依頼元確認後に確定（各ステップの説明文） ?>
+		<?php // TODO(仮): 文言は依頼元確認後に確定（各ステップの説明文） [copy:lp.steps] ?>
 		<ol class="spc-steps__list" role="list">
 			<li class="spc-steps__item">
 				<span class="spc-steps__num" aria-hidden="true">1</span>

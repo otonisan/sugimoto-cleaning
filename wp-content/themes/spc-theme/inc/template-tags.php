@@ -1,6 +1,6 @@
 <?php
 /**
- * 表示用の関数（CTA・仮バッジ・仮枠・FV・メニュー）。
+ * 表示用の関数（CTA・仮バッジ・仮枠・FV・メニュー・FAQ・ページの種類・お知らせ欄）。
  * spc-core が無くても表示が壊れないよう、function_exists で確かめてから呼ぶ。
  */
 
@@ -60,7 +60,7 @@ function spc_cta_block(): void {
 	?>
 	<section class="spc-section spc-cta-block" aria-labelledby="spc-cta-block-title" data-sticky-hide>
 		<div class="spc-container spc-cta-block__inner">
-			<?php // TODO(仮): 文言は依頼元確認後に確定（見出し・説明文） ?>
+			<?php // TODO(仮): 文言は依頼元確認後に確定（見出し・説明文） [copy:common.cta-block] ?>
 			<h2 id="spc-cta-block-title" class="spc-cta-block__title"><?php esc_html_e( 'まずは写真でご相談ください', 'spc' ); ?></h2>
 			<p class="spc-cta-block__text"><?php esc_html_e( '他店で落ちなかったシミのご相談も承ります。写真を拝見し、落とせる可能性とリスクを職人がお伝えします。', 'spc' ); ?></p>
 			<?php spc_cta( 'final' ); ?>
@@ -188,7 +188,7 @@ function spc_price_label( int $post_id ): string {
  * @return array<int,array{0:string,1:string}> array( 見出し, 説明文 ) の配列。
  */
 function spc_price_steps(): array {
-	// TODO(仮): 文言は依頼元確認後に確定（3段階の説明文）
+	// TODO(仮): 文言は依頼元確認後に確定（3段階の説明文） [copy:lp.price-steps]
 	return array(
 		array( __( '写真で概算', 'spc' ), __( '写真から分かる範囲で、料金の目安をお伝えします。', 'spc' ) ),
 		array( __( '現物を拝見して正式見積', 'spc' ), __( 'お送りいただいた衣類を職人が確認し、正式な金額をお伝えします。', 'spc' ) ),
@@ -213,21 +213,95 @@ function spc_lp_query( string $post_type, array $args = array() ): ?WP_Query {
 }
 
 /**
+ * よくある質問のクエリ。0件、または spc-core が無いときは null（spc_lp_query と同じ）。
+ *
+ * @param string[] $groups   分類（spc_faq_group）。空なら全分類。
+ * @param bool     $top_only true なら「トップに表示」付きだけ。
+ * @param int      $limit    最大件数（-1 で全件）。
+ */
+function spc_faq_query( array $groups = array(), bool $top_only = false, int $limit = -1 ): ?WP_Query {
+	$meta_query = array();
+	if ( $groups ) {
+		$meta_query[] = array(
+			'key'     => 'spc_faq_group',
+			'value'   => array_values( array_map( 'strval', $groups ) ),
+			'compare' => 'IN',
+		);
+	}
+	if ( $top_only ) {
+		// チェックありは '1'。なしは '' か未保存のため、'1' だけを見る。
+		$meta_query[] = array(
+			'key'   => 'spc_show_on_top',
+			'value' => '1',
+		);
+	}
+
+	$args = array( 'posts_per_page' => $limit );
+	if ( $meta_query ) {
+		$args['meta_query'] = $meta_query; // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
+	}
+	return spc_lp_query( 'spc_faq', $args );
+}
+
+/**
  * トップのFAQ（「トップに表示」付き・最大5件）。FAQセクションと構造化データで同じものを使う。
  */
 function spc_top_faq_query(): ?WP_Query {
-	return spc_lp_query(
-		'spc_faq',
-		array(
-			'posts_per_page' => 5,
-			'meta_query'     => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
-				array(
-					'key'   => 'spc_show_on_top',
-					'value' => '1',
-				),
-			),
-		)
+	return spc_faq_query( array(), true, 5 );
+}
+
+/**
+ * 今のページの種類（<body data-page-type> と計測の page_type。DESIGN.md §6）。
+ * lp / service / price / case / about / guide / legal / other のどれか。
+ */
+function spc_page_type(): string {
+	if ( is_front_page() ) {
+		return 'lp';
+	}
+	if ( is_post_type_archive( 'spc_case' ) || is_singular( 'spc_case' ) ) {
+		return 'case';
+	}
+	if ( ! is_page() ) {
+		return 'other';
+	}
+	$page = get_queried_object();
+	if ( ! $page instanceof WP_Post ) {
+		return 'other';
+	}
+	// 規約・法定表示の子ページ（利用規約・特商法・個人情報）。
+	if ( $page->post_parent && 'legal' === get_post_field( 'post_name', $page->post_parent ) ) {
+		return 'legal';
+	}
+	$types = array(
+		'stain-removal' => 'service',
+		'down-coat'     => 'service',
+		'price'         => 'price',
+		'about'         => 'about',
+		'guide'         => 'guide',
+		'legal'         => 'legal',
 	);
+	return $types[ $page->post_name ] ?? 'other';
+}
+
+/**
+ * 固定ページの本文を「お知らせ・補足」として出すときのHTML（the_content を通したもの）。
+ * タグと &nbsp; を除いて文字が残らなければ空文字（欄ごと出さない）。
+ */
+function spc_page_notes_html( int $post_id ): string {
+	$raw = (string) get_post_field( 'post_content', $post_id );
+	if ( '' === trim( $raw ) ) {
+		return '';
+	}
+	$html = (string) apply_filters( 'the_content', $raw ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- WordPress 標準のフィルタ
+	$text = str_replace( array( '&nbsp;', '&#160;', "\u{00A0}" ), '', wp_strip_all_tags( $html ) );
+	return '' === trim( $text ) ? '' : $html;
+}
+
+/**
+ * 「お知らせ・補足」に出す本文があるか。
+ */
+function spc_has_page_notes( int $post_id ): bool {
+	return '' !== spc_page_notes_html( $post_id );
 }
 
 /**

@@ -60,9 +60,11 @@ function spc_enqueue_assets(): void {
 		)
 	);
 
-	// LP 固有の部品はトップだけで読み込む（共有セクションは sections.css）。
+	// LP 固有の部品はトップだけ、下層ページの共通部品（パンくず・お知らせ・表）はトップ以外で読み込む（共有セクションは sections.css）。
 	if ( is_front_page() ) {
 		wp_enqueue_style( 'spc-lp', get_theme_file_uri( 'assets/css/lp.css' ), array( 'spc-style' ), spc_asset_version( 'assets/css/lp.css' ) );
+	} else {
+		wp_enqueue_style( 'spc-pages', get_theme_file_uri( 'assets/css/pages.css' ), array( 'spc-style' ), spc_asset_version( 'assets/css/pages.css' ) );
 	}
 }
 add_action( 'wp_enqueue_scripts', 'spc_enqueue_assets' );

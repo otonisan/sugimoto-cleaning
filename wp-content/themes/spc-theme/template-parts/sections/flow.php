@@ -20,7 +20,7 @@ $spc_args = wp_parse_args(
 $spc_section_id = '' !== (string) $spc_args['id'] ? ' id="' . esc_attr( (string) $spc_args['id'] ) . '"' : '';
 $spc_tone_class = 'mist' === $spc_args['tone'] ? ' spc-section--mist' : '';
 
-// TODO(仮): 文言は依頼元確認後に確定（各手順の説明文）
+// TODO(仮): 文言は依頼元確認後に確定（各手順の説明文） [copy:lp.flow]
 $spc_flow = array(
 	array( __( '写真で相談', 'spc' ), __( 'LINEで写真をお送りください。落とせる可能性とリスク、料金の目安をお伝えします。', 'spc' ) ),
 	array( __( '発送', 'spc' ), __( 'ご納得いただけましたら、衣類を当店宛てにお送りください。', 'spc' ) ),
@@ -35,7 +35,7 @@ $spc_flow = array(
 	<div class="spc-container spc-split">
 		<div class="spc-split__head">
 			<h2 id="<?php echo esc_attr( (string) $spc_args['heading_id'] ); ?>" class="spc-flow__title"><?php echo esc_html( (string) $spc_args['heading'] ); ?></h2>
-			<?php // TODO(仮): 文言は依頼元確認後に確定 ?>
+			<?php // TODO(仮): 文言は依頼元確認後に確定 [copy:lp.flow] ?>
 			<p class="spc-split__lead"><?php esc_html_e( '正式なお見積りにご承認いただくまで、施工は始めません。', 'spc' ); ?></p>
 		</div>
 		<ol class="spc-flow__list spc-split__body" role="list">

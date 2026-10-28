@@ -1,59 +1,155 @@
 <?php
 /**
- * 構造化データ（JSON-LD）。トップだけに出す。
+ * 構造化データ（JSON-LD）。404以外の全ページに出す。
+ * トップ：Organization・DryCleaningOrLaundry・FAQPage。ほかのページ：Organization・BreadcrumbList（＋ページごとの追加）。
  * 未確定の情報（住所・電話・評価・口コミ・価格帯）は書かない。確定したら依頼元の確認を取ってから足す。
  */
 
 defined( 'ABSPATH' ) || exit;
 
 /**
- * トップの構造化データ（@graph）を組み立てる。
+ * 運営会社（全ページ共通）。
  *
  * @return array<string,mixed>
  */
-function spc_front_page_schema(): array {
-	$org_id = home_url( '/#organization' );
+function spc_schema_organization(): array {
+	return array(
+		'@type'        => 'Organization',
+		'@id'          => home_url( '/#organization' ),
+		'name'         => '有限会社杉本クリーニング商会',
+		'foundingDate' => '1954',
+	);
+}
 
+/**
+ * パンくず（spc_breadcrumb_items と同じ項目）。項目が2つ未満なら null。
+ *
+ * @return array<string,mixed>|null
+ */
+function spc_schema_breadcrumb_list(): ?array {
+	$items = array_values( spc_breadcrumb_items() );
+	if ( count( $items ) < 2 ) {
+		return null;
+	}
+	$elements = array();
+	foreach ( $items as $i => $item ) {
+		$elements[] = array(
+			'@type'    => 'ListItem',
+			'position' => $i + 1,
+			'name'     => spc_schema_text( $item['label'] ),
+			'item'     => $item['url'],
+		);
+	}
+	return array(
+		'@type'           => 'BreadcrumbList',
+		'@id'             => $items[ count( $items ) - 1 ]['url'] . '#breadcrumb',
+		'itemListElement' => $elements,
+	);
+}
+
+/**
+ * よくある質問（ページ上のFAQと同じクエリを渡す。本番では仮データは spc_query_args で除外済み）。
+ *
+ * @param WP_Query $faqs FAQ のクエリ。
+ * @param string   $id   ノードの @id（例：home_url( '/#faq' )）。
+ * @return array<string,mixed>
+ */
+function spc_schema_faq_page( WP_Query $faqs, string $id ): array {
+	$questions = array();
+	foreach ( $faqs->posts as $faq ) {
+		$questions[] = array(
+			'@type'          => 'Question',
+			'name'           => spc_schema_text( get_the_title( $faq ) ),
+			'acceptedAnswer' => array(
+				'@type' => 'Answer',
+				'text'  => spc_schema_text( strip_shortcodes( $faq->post_content ) ),
+			),
+		);
+	}
+	return array(
+		'@type'      => 'FAQPage',
+		'@id'        => $id,
+		'mainEntity' => $questions,
+	);
+}
+
+/**
+ * サービス（下層のサービスページ用）。提供者は運営会社。
+ *
+ * @return array<string,mixed>
+ */
+function spc_schema_service( string $name, string $description ): array {
+	return array(
+		'@type'       => 'Service',
+		'name'        => spc_schema_text( $name ),
+		'description' => spc_schema_text( $description ),
+		'provider'    => array( '@id' => home_url( '/#organization' ) ),
+	);
+}
+
+/**
+ * トップの @graph（運営会社・ブランド・FAQ）。
+ *
+ * @return array<int,array<string,mixed>>
+ */
+function spc_schema_front_graph(): array {
 	$graph = array(
-		array(
-			'@type'        => 'Organization',
-			'@id'          => $org_id,
-			'name'         => '有限会社杉本クリーニング商会',
-			'foundingDate' => '1954',
-		),
+		spc_schema_organization(),
 		array(
 			'@type'              => 'DryCleaningOrLaundry',
 			'@id'                => home_url( '/#business' ),
 			'name'               => spc_brand_name(),
 			'url'                => home_url( '/' ),
-			'parentOrganization' => array( '@id' => $org_id ),
+			'parentOrganization' => array( '@id' => home_url( '/#organization' ) ),
 		),
 	);
 
-	// FAQPage：ページ上のFAQ（spc_top_faq_query）と同じ質問・回答。本番では仮データは spc_query_args で除外済み。
+	// FAQPage：ページ上のFAQ（spc_top_faq_query）と同じ質問・回答。
 	$faqs = spc_top_faq_query();
 	if ( $faqs ) {
-		$questions = array();
-		foreach ( $faqs->posts as $faq ) {
-			$questions[] = array(
-				'@type'          => 'Question',
-				'name'           => spc_schema_text( get_the_title( $faq ) ),
-				'acceptedAnswer' => array(
-					'@type' => 'Answer',
-					'text'  => spc_schema_text( strip_shortcodes( $faq->post_content ) ),
-				),
-			);
-		}
-		$graph[] = array(
-			'@type'      => 'FAQPage',
-			'@id'        => home_url( '/#faq' ),
-			'mainEntity' => $questions,
-		);
+		$graph[] = spc_schema_faq_page( $faqs, home_url( '/#faq' ) );
+	}
+	return $graph;
+}
+
+/**
+ * 今のページの @graph（404 では空）。
+ *
+ * @return array<int,array<string,mixed>>
+ */
+function spc_schema_graph(): array {
+	if ( is_404() ) {
+		return array();
+	}
+	if ( is_front_page() ) {
+		return spc_schema_front_graph();
 	}
 
+	$graph      = array( spc_schema_organization() );
+	$breadcrumb = spc_schema_breadcrumb_list();
+	if ( $breadcrumb ) {
+		$graph[] = $breadcrumb;
+	}
+
+	// ---- ページごとの追加（Task 4〜9 がここに1行ずつ足す） ----------------------
+	// spc_page_type() と固定ページのスラッグで分ける。例：
+	// if ( 'service' === $page_type && 'stain-removal' === $slug ) { $graph[] = spc_schema_service( …, … ); }
+	$page_type = spc_page_type();
+	$slug      = is_page() ? (string) get_post_field( 'post_name', get_queried_object_id() ) : '';
+	// ---- ページごとの追加ここまで ------------------------------------------------
+
+	return $graph;
+}
+
+/**
+ * トップの構造化データ（@context と @graph）。互換のため残す（トップでは spc_schema_graph と同じ内容）。
+ *
+ * @return array<string,mixed>
+ */
+function spc_front_page_schema(): array {
 	return array(
 		'@context' => 'https://schema.org',
-		'@graph'   => $graph,
+		'@graph'   => spc_schema_front_graph(),
 	);
 }
 
@@ -66,17 +162,24 @@ function spc_schema_text( string $html ): string {
 }
 
 /**
- * wp_head に JSON-LD を出す（トップのみ）。
+ * wp_head に JSON-LD を出す（404以外の全ページ）。
  * JSON_HEX_TAG で「<」「>」を < などにし、本文に「</script>」が入っても script 要素を抜けないようにする。
  */
-function spc_output_front_page_schema(): void {
-	if ( ! is_front_page() ) {
+function spc_output_schema(): void {
+	$graph = spc_schema_graph();
+	if ( ! $graph ) {
 		return;
 	}
-	$json = wp_json_encode( spc_front_page_schema(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG );
+	$json = wp_json_encode(
+		array(
+			'@context' => 'https://schema.org',
+			'@graph'   => $graph,
+		),
+		JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG
+	);
 	if ( ! $json ) {
 		return;
 	}
 	echo '<script type="application/ld+json">' . $json . '</script>' . "\n"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- wp_json_encode（JSON_HEX_TAG）で安全にした値
 }
-add_action( 'wp_head', 'spc_output_front_page_schema' );
+add_action( 'wp_head', 'spc_output_schema' );

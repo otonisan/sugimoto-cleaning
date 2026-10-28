@@ -21,7 +21,7 @@ $spc_args = wp_parse_args(
 $spc_section_id = '' !== (string) $spc_args['id'] ? ' id="' . esc_attr( (string) $spc_args['id'] ) . '"' : '';
 $spc_tone_class = 'mist' === $spc_args['tone'] ? ' spc-section--mist' : '';
 
-// TODO(仮): 文言は依頼元確認後に確定（導入文・判断基準・結びの文）
+// TODO(仮): 文言は依頼元確認後に確定（導入文・判断基準・結びの文） [copy:lp.limits]
 $spc_limits = array(
 	__( '色落ちの可能性が高い素材・染色', 'spc' ),
 	__( '縮み・風合いの変化が避けられない素材', 'spc' ),

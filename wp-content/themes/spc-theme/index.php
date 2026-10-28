@@ -22,11 +22,7 @@ else :
 	}
 	?>
 	<section class="spc-page">
-		<header class="spc-page__header">
-			<div class="spc-container">
-				<h1 class="spc-page__title"><?php echo wp_kses_post( $spc_heading ); ?></h1>
-			</div>
-		</header>
+		<?php get_template_part( 'template-parts/page-header', null, array( 'title' => $spc_heading ) ); ?>
 		<div class="spc-page__body">
 			<div class="spc-container">
 				<div class="spc-prose">

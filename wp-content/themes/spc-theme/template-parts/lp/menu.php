@@ -5,7 +5,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-// TODO(仮): 文言は依頼元確認後に確定（各品目の説明文）
+// TODO(仮): 文言は依頼元確認後に確定（各品目の説明文） [copy:lp.menu]
 $spc_menu_items = array(
 	array(
 		'label' => __( '特殊シミ抜き', 'spc' ),

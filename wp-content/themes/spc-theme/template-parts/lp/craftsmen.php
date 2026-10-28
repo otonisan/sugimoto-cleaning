@@ -12,7 +12,7 @@ $spc_staff = spc_lp_query( 'spc_staff', array( 'posts_per_page' => 4 ) );
 <section class="spc-section spc-section--sumi spc-craftsmen" aria-labelledby="spc-craftsmen-title">
 	<div class="spc-container">
 		<h2 id="spc-craftsmen-title" class="spc-craftsmen__title"><?php esc_html_e( '施工する職人と、施工母体', 'spc' ); ?></h2>
-		<?php // TODO(仮): 文言は依頼元確認後に確定 ?>
+		<?php // TODO(仮): 文言は依頼元確認後に確定 [copy:lp.craftsmen] ?>
 		<p class="spc-craftsmen__lead"><?php esc_html_e( 'お預かりした衣類は、自社の作業場で職人が一点ずつ確認し、施工します。', 'spc' ); ?></p>
 
 		<div class="spc-craftsmen__body">
@@ -59,7 +59,7 @@ $spc_staff = spc_lp_query( 'spc_staff', array( 'posts_per_page' => 4 ) );
 					?>
 				</div>
 				<h3 class="spc-craftsmen__base-title"><?php esc_html_e( '施工母体', 'spc' ); ?></h3>
-				<?php // TODO(仮): 文言は依頼元確認後に確定 ?>
+				<?php // TODO(仮): 文言は依頼元確認後に確定 [copy:lp.craftsmen] ?>
 				<dl class="spc-craftsmen__facts">
 					<div class="spc-craftsmen__fact">
 						<dt><?php esc_html_e( '運営', 'spc' ); ?></dt>

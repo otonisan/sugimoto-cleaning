@@ -66,14 +66,14 @@ test.describe('計測：GTM', () => {
 });
 
 test.describe('計測：イベント', () => {
-  test('LP を開くと landing_view（page_type: lp）が dataLayer に入る。LP 以外では入らない', async ({ page }) => {
+  test('LP を開くと landing_view（page_type: lp）が dataLayer に入る。LP 以外では data-page-type が lp 以外で、landing_view は入らない', async ({ page }) => {
     await page.goto('/');
     await expect(page.locator('body')).toHaveAttribute('data-page-type', 'lp');
     const events = await dataLayer(page);
     expect(events.filter((e) => e.event === 'landing_view')).toEqual([{ event: 'landing_view', page_type: 'lp' }]);
 
     await page.goto('/price/');
-    expect(await page.locator('body').getAttribute('data-page-type')).toBeNull();
+    await expect(page.locator('body')).toHaveAttribute('data-page-type', /^(?!lp$).+/);
     expect((await dataLayer(page)).some((e) => e.event === 'landing_view')).toBe(false);
   });
 
@@ -87,7 +87,7 @@ test.describe('計測：イベント', () => {
     await suppressNavigation(page);
     await page.locator('.hero [data-cta-location="fv"]').click();
     const clicks = (await dataLayer(page)).filter((e) => e.event === 'line_click');
-    expect(clicks).toEqual([{ event: 'line_click', cta_location: 'fv' }]);
+    expect(clicks).toEqual([{ event: 'line_click', cta_location: 'fv', page_type: 'lp' }]);
 
     // 実際の遷移も確認する（確認用リスナーを外すためリロード）。
     await page.reload();
@@ -145,7 +145,7 @@ test.describe('QRモーダル（PC）', () => {
     await expect(dialog.getByText('スマートフォンのカメラで読み取ってください')).toBeVisible();
     await expect(dialog.locator('.spc-ph-image, img').first()).toBeVisible();
     const clicks = (await dataLayer(page)).filter((e) => e.event === 'line_click');
-    expect(clicks).toEqual([{ event: 'line_click', cta_location: 'fv' }]);
+    expect(clicks).toEqual([{ event: 'line_click', cta_location: 'fv', page_type: 'lp' }]);
 
     await page.keyboard.press('Escape');
     await expect(dialog).toBeHidden();
