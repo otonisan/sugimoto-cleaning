@@ -79,7 +79,7 @@ while ( have_posts() ) :
 							</div>
 						<?php endforeach; ?>
 					</dl>
-					<div class="spc-stain__photo">
+					<div class="spc-subpage__photo">
 						<?php
 						// TODO(仮): 手元・作業の実写（3:2）に差し替え。画像IDは inc/placeholders.php の 'stain_work' に入れる。
 						spc_image_or_placeholder( spc_theme_image_id( 'stain_work' ), 'spc-menu', '手元・作業の写真 3:2', '3/2' );
@@ -101,7 +101,7 @@ while ( have_posts() ) :
 						<p><?php esc_html_e( '時間がたつと生地になじみ、色が戻りにくくなることがあります。気になりはじめた段階で、一度写真をお送りください。', 'spc' ); ?></p>
 						<p><?php esc_html_e( '落とせる範囲は素材や状態によって変わるため、写真を拝見したうえでお伝えします。', 'spc' ); ?></p>
 					</div>
-					<div class="spc-stain__photo">
+					<div class="spc-subpage__photo">
 						<?php
 						// TODO(仮): 黄ばみ・汗汚れの実写（3:2）に差し替え。画像IDは inc/placeholders.php の 'stain_yellowing' に入れる。
 						spc_image_or_placeholder( spc_theme_image_id( 'stain_yellowing' ), 'spc-menu', '黄ばみ・汗汚れの写真 3:2', '3/2' );

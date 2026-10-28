@@ -136,14 +136,22 @@ function spc_schema_graph(): array {
 	// if ( 'service' === $page_type && 'stain-removal' === $slug ) { $graph[] = spc_schema_service( …, … ); }
 	$page_type = spc_page_type();
 	$slug      = is_page() ? (string) get_post_field( 'post_name', get_queried_object_id() ) : '';
-	if ( 'service' === $page_type && 'stain-removal' === $slug ) {
-		// TODO(仮): 文言は依頼元確認後に確定（Service の説明文） [copy:stain.schema]
-		$service               = spc_schema_service( '特殊シミ抜き', '他店で落ちなかったシミ、時間がたったシミなどのご相談を、写真で承ります。' );
-		$service['areaServed'] = 'JP';
-		$graph[]               = $service;
-		$stain_faqs            = spc_faq_query( array( 'stain' ) );
-		if ( $stain_faqs ) {
-			$graph[] = spc_schema_faq_page( $stain_faqs, get_permalink( get_queried_object_id() ) . '#faq' );
+	if ( 'service' === $page_type ) {
+		$service_pages = array(
+			// TODO(仮): 文言は依頼元確認後に確定（Service の説明文） [copy:stain.schema]
+			'stain-removal' => array( '特殊シミ抜き', '他店で落ちなかったシミ、時間がたったシミなどのご相談を、写真で承ります。', 'stain' ),
+			// TODO(仮): 文言は依頼元確認後に確定（Service の説明文） [copy:down.schema]
+			'down-coat'     => array( '高級ダウン・コートのクリーニング', '高級ダウンやコート、ジャケットのお手入れを、素材や装飾、洗濯表示を確認したうえでご相談いただけます。', 'down' ),
+		);
+		if ( isset( $service_pages[ $slug ] ) ) {
+			list( $service_name, $service_text, $faq_group ) = $service_pages[ $slug ];
+			$service               = spc_schema_service( $service_name, $service_text );
+			$service['areaServed'] = 'JP';
+			$graph[]               = $service;
+			$service_faqs          = spc_faq_query( array( $faq_group ) );
+			if ( $service_faqs ) {
+				$graph[] = spc_schema_faq_page( $service_faqs, get_permalink( get_queried_object_id() ) . '#faq' );
+			}
 		}
 	}
 	// ---- ページごとの追加ここまで ------------------------------------------------

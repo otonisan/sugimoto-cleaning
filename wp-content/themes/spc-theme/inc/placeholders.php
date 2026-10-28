@@ -57,6 +57,16 @@ function spc_theme_placeholder_images(): array {
 			'label'         => __( '特殊シミ抜き「黄ばみ・汗汚れ」の写真', 'spc' ),
 			'file'          => 'page-stain-removal.php',
 		),
+		'down_detail'    => array(
+			'attachment_id' => 0,
+			'label'         => __( '高級ダウン「表地・縫い目の接写」の写真', 'spc' ),
+			'file'          => 'page-down-coat.php',
+		),
+		'coat_detail'    => array(
+			'attachment_id' => 0,
+			'label'         => __( 'コート・ジャケット「生地・ボタンまわり」の写真', 'spc' ),
+			'file'          => 'page-down-coat.php',
+		),
 	);
 
 	/**
@@ -182,6 +192,36 @@ function spc_theme_placeholder_copy(): array {
 		'stain.yellowing'  => array(
 			'label'     => __( '特殊シミ抜き「黄ばみ・汗汚れ」', 'spc' ),
 			'file'      => 'page-stain-removal.php',
+			'confirmed' => false,
+		),
+		'down.lead' => array(
+			'label'     => __( '高級ダウン・コート「リード文」', 'spc' ),
+			'file'      => 'page-down-coat.php',
+			'confirmed' => false,
+		),
+		'down.checkpoints' => array(
+			'label'     => __( '高級ダウン・コート「品目ごとの確認点」', 'spc' ),
+			'file'      => 'page-down-coat.php',
+			'confirmed' => false,
+		),
+		'down.down' => array(
+			'label'     => __( '高級ダウン・コート「高級ダウン」', 'spc' ),
+			'file'      => 'page-down-coat.php',
+			'confirmed' => false,
+		),
+		'down.coat' => array(
+			'label'     => __( '高級ダウン・コート「コート・ジャケット」', 'spc' ),
+			'file'      => 'page-down-coat.php',
+			'confirmed' => false,
+		),
+		'down.before-sending' => array(
+			'label'     => __( '高級ダウン・コート「お送りいただく前に」', 'spc' ),
+			'file'      => 'page-down-coat.php',
+			'confirmed' => false,
+		),
+		'down.schema' => array(
+			'label'     => __( '高級ダウン・コート「構造化データの説明文」', 'spc' ),
+			'file'      => 'inc/schema.php',
 			'confirmed' => false,
 		),
 	);
