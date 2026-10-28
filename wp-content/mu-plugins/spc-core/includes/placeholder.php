@@ -126,10 +126,30 @@ function spc_settings_page_url(): string {
 }
 
 /**
+ * サイトに必要な固定ページ（パス => ページ名。ページ名は docs/sitemap.md §2）。
+ * 公開前チェックで、これらが決められたURLにあるかを確認する。
+ *
+ * @return array<string,string>
+ */
+function spc_required_pages(): array {
+	return array(
+		'stain-removal'   => '特殊シミ抜き',
+		'down-coat'       => '高級ダウン・コート',
+		'price'           => '料金・送料',
+		'about'           => '職人・運営会社',
+		'guide'           => 'ご利用の流れ・よくある質問',
+		'legal'           => '規約・法定表示',
+		'legal/terms'     => '利用規約',
+		'legal/tokushoho' => '特定商取引法に基づく表記',
+		'legal/privacy'   => '個人情報・相談写真の取扱い',
+	);
+}
+
+/**
  * 公開前に差し替えが必要な項目の一覧。空なら公開OK。
  *
  * 各項目の形：array{type:string,label:string,edit_url:string}
- * - type：'post'（仮データの投稿・固定ページ）/ 'line_url' / 'line_qr' / 'brand_name' / 'gtm_id' / 'reply_time_note'
+ * - type：'post'（仮データの投稿・固定ページ）/ 'line_url' / 'line_qr' / 'brand_name' / 'gtm_id' / 'reply_time_note' / 'page_missing'（必要な固定ページが無い）
  *   ／フィルタ spc_placeholder_report で追加されるもの（テーマの仮画像は 'theme_image'）。
  * - label：管理画面・CLIにそのまま出す日本語の説明。
  * - edit_url：直す画面のURL。管理画面で直せないもの（テーマのファイル）は ''（リンクなし）。
@@ -160,6 +180,20 @@ function spc_placeholder_report(): array {
 			/* translators: 1: 投稿タイトル 2: 投稿の種類 */
 			'label'    => sprintf( __( '仮データの投稿：%1$s（%2$s）', 'spc' ), $title, 'page' === $post->post_type ? __( '固定ページ', 'spc' ) : ( $type_obj ? $type_obj->labels->singular_name : $post->post_type ) ),
 			'edit_url' => admin_url( 'post.php?post=' . $post->ID . '&action=edit' ), // CLIなど未ログインでも出す
+		);
+	}
+
+	// 必要な固定ページ：決められたパスに無い、またはゴミ箱にあるものを知らせる。
+	foreach ( spc_required_pages() as $path => $page_title ) {
+		$page = get_page_by_path( $path, OBJECT, 'page' );
+		if ( $page && 'trash' !== $page->post_status ) {
+			continue;
+		}
+		$report[] = array(
+			'type'     => 'page_missing',
+			/* translators: 1: ページ名 2: パス */
+			'label'    => sprintf( __( '必要な固定ページがありません：%1$s（/%2$s/）', 'spc' ), $page_title, $path ),
+			'edit_url' => admin_url( 'edit.php?post_type=page' ),
 		);
 	}
 

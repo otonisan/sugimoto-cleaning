@@ -22,6 +22,7 @@ function spc_seed_definitions(): array {
 		'post_title' => '（仮）ウールコートの赤ワインのシミ',
 		'meta'       => array(
 			'spc_case_no'         => '仮-001',
+			'spc_case_menu'       => 'stain',
 			'spc_item'            => 'ウールコート（仮）',
 			'spc_material'        => 'ウール（仮）',
 			'spc_stain'           => '赤ワイン（仮）',
@@ -38,6 +39,7 @@ function spc_seed_definitions(): array {
 		'post_title' => '（仮）ダウンジャケットの襟の汚れ',
 		'meta'       => array(
 			'spc_case_no'         => '仮-002',
+			'spc_case_menu'       => 'down',
 			'spc_item'            => 'ダウンジャケット（仮）',
 			'spc_material'        => 'ナイロン（仮）',
 			'spc_stain'           => 'ファンデーション・皮脂汚れ（襟）（仮）',
@@ -54,6 +56,7 @@ function spc_seed_definitions(): array {
 		'post_title' => '（仮）シルクのブラウスの黄ばみ',
 		'meta'       => array(
 			'spc_case_no'         => '仮-003',
+			'spc_case_menu'       => 'yellowing',
 			'spc_item'            => 'シルクのブラウス（仮）',
 			'spc_material'        => 'シルク（仮）',
 			'spc_stain'           => '黄ばみ（汗）（仮）',
@@ -90,13 +93,20 @@ function spc_seed_definitions(): array {
 		);
 	}
 
-	// よくある質問（すべてトップに表示）。
+	// よくある質問（最初の5件はトップに表示。下層ページ用の4件はトップに出さない）。
 	$faqs = array(
 		array( 'faq-shipping', 'shipping', '全国どこからでも送れますか。', '全国からお送りいただけます。往復の送料は、お送りいただく前にお見せします。離島など一部の地域は、あらためて確認します（仮）' ),
 		array( 'faq-days', 'other', '仕上がりまでどのくらいかかりますか。', 'シミの種類や素材によって異なります。目安の日数は、正式なお見積りのときにお伝えします（仮）' ),
 		array( 'faq-payment', 'payment', '支払い方法は何がありますか。', '現在、決めているところです。決まりしだい、こちらに記載します（仮）' ),
 		array( 'faq-photo', 'photo', '送った写真はどのように扱われますか。', 'ご相談への回答のためだけに使います。お客様の許可なく公開することはありません。一定の期間がすぎたあと、削除します（仮）' ),
 		array( 'faq-decline', 'other', 'お引き受けできないこともありますか。', 'あります。生地を傷めるおそれが大きい場合などは、理由をご説明してお断りすることがあります。すでに品物をお送りいただいていた場合は、お返しします。返送料は料金ページをご確認ください（仮）' ),
+	);
+	// 下層ページ（特殊シミ抜き・高級ダウン/コート）用。可否は断定せず、写真を見てから伝える。
+	$section_faqs = array(
+		array( 'faq-stain-1', 'stain', '時間がたったシミも相談できますか。', 'ご相談いただけます。写真を拝見してから、可能かどうかをお伝えします（仮）' ),
+		array( 'faq-stain-2', 'stain', '自分で処理してしまったシミも相談できますか。', 'ご相談いただけます。どのような処理をされたかも、写真と一緒にお知らせください。写真を拝見してから、可能かどうかをお伝えします（仮）' ),
+		array( 'faq-down-1', 'down', 'ファーや飾りが付いたダウンも出せますか。', 'まずは写真をお送りください。付属品の状態を拝見してから、可能かどうかをお伝えします（仮）' ),
+		array( 'faq-down-2', 'down', '洗濯表示のタグを切ってしまった服も出せますか。', 'まずは写真をお送りください。素材や状態を拝見してから、可能かどうかをお伝えします（仮）' ),
 	);
 	foreach ( $faqs as $i => $f ) {
 		$defs[] = array(
@@ -108,6 +118,19 @@ function spc_seed_definitions(): array {
 			'meta'         => array(
 				'spc_faq_group'   => $f[1],
 				'spc_show_on_top' => '1',
+			),
+		);
+	}
+	foreach ( $section_faqs as $i => $f ) {
+		$defs[] = array(
+			'key'          => $f[0],
+			'post_type'    => 'spc_faq',
+			'post_title'   => '（仮）' . $f[2],
+			'post_content' => $f[3],
+			'menu_order'   => count( $faqs ) + $i + 1,
+			'meta'         => array(
+				'spc_faq_group'   => $f[1],
+				'spc_show_on_top' => '0',
 			),
 		);
 	}
@@ -138,13 +161,20 @@ function spc_seed_definitions(): array {
 		array( 'tokushoho', '特定商取引法に基づく表記', 'legal' ),
 		array( 'privacy', '個人情報・相談写真の取扱い', 'legal' ),
 	);
+	$page_contents = spc_seed_page_contents();
+	$child_orders  = array(
+		'terms'     => 1,
+		'tokushoho' => 2,
+		'privacy'   => 3,
+	);
 	foreach ( $pages as $pg ) {
 		$defs[] = array(
 			'key'          => 'page-' . $pg[0],
 			'post_type'    => 'page',
 			'post_title'   => $pg[1],
 			'post_name'    => $pg[0],
-			'post_content' => '準備中（仮）',
+			'post_content' => $page_contents[ 'page-' . $pg[0] ] ?? '',
+			'menu_order'   => $child_orders[ $pg[0] ] ?? 0,
 			'parent_key'   => '' === $pg[2] ? '' : 'page-' . $pg[2],
 		);
 	}
@@ -171,17 +201,59 @@ function spc_seed_find( string $key ): int {
 }
 
 /**
- * 仮データを投入する。何度実行しても同じ結果になる。
+ * 既存の仮データに、あとから増えた定義を足す。仮データのまま（_spc_is_placeholder=1）の投稿だけが対象。
+ * - メタ：投稿にまったく値が無いキーだけを追加する（上書きしない）。
+ * - 本文：旧シードの値『準備中（仮）』と完全に一致するときだけ新しい本文に置き換える。
  *
- * @return array{created:int, skipped:int}
+ * @param int                 $id  投稿ID。
+ * @param array<string,mixed> $def 仮データの定義。
+ * @return bool 変更したか。
+ */
+function spc_seed_backfill( int $id, array $def ): bool {
+	if ( ! spc_is_placeholder( $id ) ) {
+		return false;
+	}
+	$changed = false;
+
+	foreach ( $def['meta'] ?? array() as $key => $value ) {
+		if ( ! metadata_exists( 'post', $id, $key ) ) {
+			update_post_meta( $id, $key, $value );
+			$changed = true;
+		}
+	}
+
+	$new_content = (string) ( $def['post_content'] ?? '' );
+	if ( '準備中（仮）' === get_post_field( 'post_content', $id ) && $new_content !== '準備中（仮）' ) {
+		$updated = wp_update_post(
+			array(
+				'ID'           => $id,
+				'post_content' => wp_slash( $new_content ),
+			)
+		);
+		$changed = $changed || ( $updated && ! is_wp_error( $updated ) );
+	}
+
+	return $changed;
+}
+
+/**
+ * 仮データを投入する。何度実行しても同じ結果になる。
+ * 作成済みの仮データには、あとから増えたメタ・旧シードの本文だけを足す（updated は変更した投稿の数）。
+ *
+ * @return array{created:int, skipped:int, updated:int}
  */
 function spc_seed_run(): array {
 	$created = 0;
 	$skipped = 0;
+	$updated = 0;
 
 	foreach ( spc_seed_definitions() as $def ) {
-		if ( spc_seed_find( $def['key'] ) ) {
+		$existing = spc_seed_find( $def['key'] );
+		if ( $existing ) {
 			++$skipped;
+			if ( spc_seed_backfill( $existing, $def ) ) {
+				++$updated;
+			}
 			continue;
 		}
 		$post = array(
@@ -214,5 +286,6 @@ function spc_seed_run(): array {
 	return array(
 		'created' => $created,
 		'skipped' => $skipped,
+		'updated' => $updated,
 	);
 }

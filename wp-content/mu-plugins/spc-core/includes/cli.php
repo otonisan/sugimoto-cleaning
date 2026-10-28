@@ -7,7 +7,7 @@ defined( 'ABSPATH' ) || exit;
 
 /**
  * launch-check の表示用の行（種類・内容・編集URL）。
- * 種類は spc_placeholder_report() の type（post / line_url / line_qr / brand_name / gtm_id / reply_time_note / theme_image など）。
+ * 種類は spc_placeholder_report() の type（post / line_url / line_qr / brand_name / gtm_id / reply_time_note / page_missing / theme_image など）。
  * 編集URLが空の行（theme_image）は管理画面では直せず、テーマのファイルを差し替える。
  *
  * @return array<int,array{種類:string,内容:string,編集URL:string}>
@@ -33,7 +33,7 @@ if ( defined( 'WP_CLI' ) && WP_CLI ) {
 			WP_CLI::error( '本番環境では仮データを投入できません。' );
 		}
 		$result = spc_seed_run();
-		WP_CLI::success( sprintf( '仮データを投入しました（作成 %d件、既存のためスキップ %d件）。', $result['created'], $result['skipped'] ) );
+		WP_CLI::success( sprintf( '仮データを投入しました（作成 %d件、既存のためスキップ %d件、既存の仮データを更新 %d件）。', $result['created'], $result['skipped'], $result['updated'] ) );
 	}
 
 	/**

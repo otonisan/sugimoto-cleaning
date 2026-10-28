@@ -1,5 +1,11 @@
 <?php
 class Test_Placeholder extends WP_UnitTestCase {
+	public function set_up() {
+		parent::set_up();
+		// 既定では必要な固定ページが揃っている状態にする（欠けている場合のテストは個別に作る）。
+		$this->create_required_pages();
+	}
+
 	public function tear_down() {
 		remove_all_filters( 'spc_is_production' );
 		delete_option( 'spc_settings' );
@@ -190,6 +196,53 @@ class Test_Placeholder extends WP_UnitTestCase {
 		foreach ( spc_placeholder_report() as $item ) {
 			$this->assertStringContainsString( 'page=spc-settings', $item['edit_url'] );
 		}
+	}
+
+	/** 必要な固定ページ9ページを、仮データではない通常の固定ページとして作る。 */
+	private function create_required_pages(): void {
+		foreach ( spc_required_pages() as $path => $title ) {
+			$parts  = explode( '/', $path );
+			$slug   = array_pop( $parts );
+			$parent = $parts ? get_page_by_path( implode( '/', $parts ) ) : null;
+			self::factory()->post->create(
+				array(
+					'post_type'   => 'page',
+					'post_status' => 'publish',
+					'post_title'  => $title,
+					'post_name'   => $slug,
+					'post_parent' => $parent ? $parent->ID : 0,
+				)
+			);
+		}
+	}
+
+	public function test_report_flags_missing_required_page() {
+		$this->good_settings();
+		$page = get_page_by_path( 'legal/privacy' );
+		wp_trash_post( $page->ID );
+		$missing = array_values( array_filter( spc_placeholder_report(), fn( $i ) => 'page_missing' === $i['type'] ) );
+		$this->assertCount( 1, $missing );
+		$this->assertStringContainsString( '/legal/privacy/', $missing[0]['label'] );
+		$this->assertStringContainsString( '個人情報・相談写真の取扱い', $missing[0]['label'] );
+		$this->assertSame( admin_url( 'edit.php?post_type=page' ), $missing[0]['edit_url'] );
+
+		// ゴミ箱から戻してスラッグを変えると、同じパスでは見つからない。
+		wp_untrash_post( $page->ID );
+		wp_update_post(
+			array(
+				'ID'          => $page->ID,
+				'post_status' => 'publish',
+				'post_name'   => 'privacy-2',
+			)
+		);
+		$missing = array_filter( spc_placeholder_report(), fn( $i ) => 'page_missing' === $i['type'] );
+		$this->assertCount( 1, $missing );
+	}
+
+	public function test_report_has_no_page_missing_when_all_pages_exist() {
+		$this->good_settings();
+		$this->assertSame( array(), array_filter( spc_placeholder_report(), fn( $i ) => 'page_missing' === $i['type'] ) );
+		$this->assertSame( array( 'stain-removal', 'down-coat', 'price', 'about', 'guide', 'legal', 'legal/terms', 'legal/tokushoho', 'legal/privacy' ), array_keys( spc_required_pages() ) );
 	}
 
 	public function test_report_empty_when_everything_set() {

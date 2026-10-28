@@ -110,11 +110,11 @@ class Test_MetaFields extends WP_UnitTestCase {
 
 	public function test_definitions_contain_brief_keys_in_order() {
 		$this->assertSame(
-			array( 'spc_case_no', 'spc_item', 'spc_material', 'spc_stain', 'spc_elapsed', 'spc_prior_treatment', 'spc_treatment', 'spc_result', 'spc_days', 'spc_before_id', 'spc_after_id', 'spc_permission_id', '_spc_is_placeholder' ),
+			array( 'spc_case_no', 'spc_item', 'spc_material', 'spc_stain', 'spc_elapsed', 'spc_prior_treatment', 'spc_treatment', 'spc_result', 'spc_days', 'spc_case_menu', 'spc_before_id', 'spc_after_id', 'spc_permission_id', '_spc_is_placeholder' ),
 			array_keys( spc_field_definitions( 'spc_case' ) )
 		);
 		$this->assertSame( array( 'stain', 'yellowing', 'down', 'coat', 'shipping' ), array_keys( spc_field_definitions( 'spc_price' )['spc_price_group']['options'] ) );
-		$this->assertSame( array( 'shipping', 'price', 'payment', 'photo', 'other' ), array_keys( spc_field_definitions( 'spc_faq' )['spc_faq_group']['options'] ) );
+		$this->assertSame( array( 'shipping', 'price', 'payment', 'photo', 'stain', 'down', 'other' ), array_keys( spc_field_definitions( 'spc_faq' )['spc_faq_group']['options'] ) );
 		$this->assertSame( 'textarea', spc_field_definitions( 'spc_staff' )['spc_bio']['type'] );
 	}
 
@@ -138,6 +138,26 @@ class Test_MetaFields extends WP_UnitTestCase {
 		$this->assertSame( '', get_post_meta( $id, 'spc_price_group', true ) );
 		update_post_meta( $id, 'spc_price_group', 'down' );
 		$this->assertSame( 'down', get_post_meta( $id, 'spc_price_group', true ) );
+	}
+
+	public function test_faq_group_accepts_stain_and_down() {
+		$id = $this->post( 'spc_faq' );
+		foreach ( array( 'stain', 'down' ) as $group ) {
+			update_post_meta( $id, 'spc_faq_group', $group );
+			$this->assertSame( $group, get_post_meta( $id, 'spc_faq_group', true ) );
+		}
+		update_post_meta( $id, 'spc_faq_group', 'hack' );
+		$this->assertSame( '', get_post_meta( $id, 'spc_faq_group', true ) );
+	}
+
+	public function test_case_menu_select() {
+		$id = $this->post( 'spc_case' );
+		$this->assertSame( '', (string) get_post_meta( $id, 'spc_case_menu', true ) );
+		update_post_meta( $id, 'spc_case_menu', 'down' );
+		$this->assertSame( 'down', get_post_meta( $id, 'spc_case_menu', true ) );
+		update_post_meta( $id, 'spc_case_menu', 'hack' );
+		$this->assertSame( '', get_post_meta( $id, 'spc_case_menu', true ) );
+		$this->assertSame( array( 'stain', 'yellowing', 'down', 'coat' ), array_keys( spc_field_definitions( 'spc_case' )['spc_case_menu']['options'] ) );
 	}
 
 	public function test_image_meta_stores_int_and_rejects_non_image() {

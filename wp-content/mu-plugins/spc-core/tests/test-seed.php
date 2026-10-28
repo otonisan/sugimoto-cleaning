@@ -35,6 +35,7 @@ class Test_Seed extends WP_UnitTestCase {
 		$count = $this->count_all();
 		$again = spc_seed_run();
 		$this->assertSame( 0, $again['created'] );
+		$this->assertSame( 0, $again['updated'] );
 		$this->assertSame( $first['created'], $again['skipped'] );
 		$this->assertSame( $count, $this->count_all() );
 	}
@@ -46,7 +47,10 @@ class Test_Seed extends WP_UnitTestCase {
 		foreach ( $ids as $id ) {
 			$this->assertSame( '1', get_post_meta( $id, '_spc_is_placeholder', true ), "post $id" );
 			$this->assertSame( 'publish', get_post_status( $id ) );
-			$this->assertStringContainsString( '（仮）', get_post( $id )->post_title . get_post( $id )->post_content );
+			// 本文が空の固定ページはタイトルに『（仮）』が付かないため、フラグだけで仮データと分かる。
+			if ( 'page' !== get_post_type( $id ) || '' !== get_post( $id )->post_content ) {
+				$this->assertStringContainsString( '（仮）', get_post( $id )->post_title . get_post( $id )->post_content );
+			}
 		}
 	}
 
@@ -60,7 +64,7 @@ class Test_Seed extends WP_UnitTestCase {
 			$this->assertSame( '', (string) get_post_meta( $p->ID, 'spc_before_id', true ) );
 			$this->assertSame( '', (string) get_post_meta( $p->ID, 'spc_after_id', true ) );
 		}
-		$faqs = get_posts( array( 'post_type' => 'spc_faq', 'posts_per_page' => -1, 'orderby' => 'menu_order', 'order' => 'ASC' ) );
+		$faqs = get_posts( array( 'post_type' => 'spc_faq', 'posts_per_page' => -1, 'orderby' => 'menu_order', 'order' => 'ASC', 'meta_key' => 'spc_show_on_top', 'meta_value' => '1' ) ); // phpcs:ignore WordPress.DB.SlowDBQuery
 		$this->assertCount( 5, $faqs );
 		$this->assertSame( array( 1, 2, 3, 4, 5 ), array_map( fn( $p ) => $p->menu_order, $faqs ) );
 		foreach ( $faqs as $p ) {
@@ -92,7 +96,10 @@ class Test_Seed extends WP_UnitTestCase {
 		foreach ( array( 'stain-removal', 'down-coat', 'price', 'about', 'guide', 'legal' ) as $slug ) {
 			$page = get_page_by_path( $slug );
 			$this->assertNotNull( $page, $slug );
-			$this->assertSame( '準備中（仮）', $page->post_content );
+			$this->assertSame( 'about' === $slug, '' !== $page->post_content, $slug );
+		}
+		foreach ( array( 'terms' => 1, 'tokushoho' => 2, 'privacy' => 3 ) as $slug => $order ) {
+			$this->assertSame( $order, get_page_by_path( "legal/$slug" )->menu_order, $slug );
 		}
 		$legal = get_page_by_path( 'legal' );
 		foreach ( array( 'terms', 'tokushoho', 'privacy' ) as $slug ) {
@@ -127,6 +134,77 @@ class Test_Seed extends WP_UnitTestCase {
 		$report = spc_placeholder_report();
 		$this->assertCount( count( $this->seeded_ids() ), $report );
 		$this->assertStringContainsString( '（固定ページ）', implode( "\n", wp_list_pluck( $report, 'label' ) ) );
+	}
+
+	public function test_seed_creates_section_faqs_not_on_top() {
+		spc_seed_run();
+		foreach ( array( 'stain', 'down' ) as $group ) {
+			$faqs = get_posts( array( 'post_type' => 'spc_faq', 'posts_per_page' => -1, 'meta_key' => 'spc_faq_group', 'meta_value' => $group ) ); // phpcs:ignore WordPress.DB.SlowDBQuery
+			$this->assertCount( 2, $faqs, $group );
+			foreach ( $faqs as $p ) {
+				// チェックボックス項目は '0' が空文字に整えられて保存される（トップに出ない）。
+			$this->assertNotSame( '1', get_post_meta( $p->ID, 'spc_show_on_top', true ) );
+				$this->assertStringEndsWith( '（仮）', $p->post_content );
+			}
+		}
+		$top = get_posts( array( 'post_type' => 'spc_faq', 'posts_per_page' => -1, 'meta_key' => 'spc_show_on_top', 'meta_value' => '1' ) ); // phpcs:ignore WordPress.DB.SlowDBQuery
+		$this->assertCount( 5, $top );
+		$this->assertEquals( 9, wp_count_posts( 'spc_faq' )->publish );
+	}
+
+	public function test_seed_sets_case_menus() {
+		spc_seed_run();
+		foreach ( array( 'case-001' => 'stain', 'case-002' => 'down', 'case-003' => 'yellowing' ) as $key => $menu ) {
+			$this->assertSame( $menu, get_post_meta( spc_seed_find( $key ), 'spc_case_menu', true ), $key );
+		}
+	}
+
+	public function test_seed_backfills_missing_meta_and_legacy_page_content() {
+		spc_seed_run();
+		$case  = spc_seed_find( 'case-001' );
+		$about = spc_seed_find( 'page-about' );
+		delete_post_meta( $case, 'spc_case_menu' );
+		wp_update_post( array( 'ID' => $about, 'post_content' => '準備中（仮）' ) );
+		$result = spc_seed_run();
+		$this->assertSame( 0, $result['created'] );
+		$this->assertGreaterThanOrEqual( 2, $result['updated'] );
+		$this->assertSame( 'stain', get_post_meta( $case, 'spc_case_menu', true ) );
+		$this->assertStringContainsString( '有限会社杉本クリーニング商会', get_post( $about )->post_content );
+		$this->assertSame( 0, spc_seed_run()['updated'] );
+	}
+
+	public function test_seed_does_not_overwrite_edited_content_or_meta() {
+		spc_seed_run();
+		$case  = spc_seed_find( 'case-001' );
+		$about = spc_seed_find( 'page-about' );
+		update_post_meta( $case, 'spc_case_menu', 'coat' );
+		wp_update_post( array( 'ID' => $about, 'post_content' => '確定した本文' ) );
+		spc_seed_run();
+		$this->assertSame( 'coat', get_post_meta( $case, 'spc_case_menu', true ) );
+		$this->assertSame( '確定した本文', get_post( $about )->post_content );
+	}
+
+	public function test_seed_backfill_skips_posts_no_longer_placeholders() {
+		spc_seed_run();
+		$case  = spc_seed_find( 'case-001' );
+		$about = spc_seed_find( 'page-about' );
+		delete_post_meta( $case, 'spc_case_menu' );
+		wp_update_post( array( 'ID' => $about, 'post_content' => '準備中（仮）' ) );
+		delete_post_meta( $case, '_spc_is_placeholder' );
+		delete_post_meta( $about, '_spc_is_placeholder' );
+		$this->assertSame( 0, spc_seed_run()['updated'] );
+		$this->assertFalse( metadata_exists( 'post', $case, 'spc_case_menu' ) );
+		$this->assertSame( '準備中（仮）', get_post( $about )->post_content );
+	}
+
+	public function test_seed_legal_skeletons_have_headings_and_no_articles() {
+		spc_seed_run();
+		$privacy = get_page_by_path( 'legal/privacy' )->post_content;
+		$this->assertStringContainsString( '<h2>アクセス解析', $privacy );
+		$this->assertStringContainsString( '<h2>相談写真の保管期間と削除</h2>', $privacy );
+		$this->assertStringNotContainsString( '第1条', $privacy );
+		$this->assertStringContainsString( '<table', get_page_by_path( 'legal/tokushoho' )->post_content );
+		$this->assertStringContainsString( '<h2>免責</h2>', get_page_by_path( 'legal/terms' )->post_content );
 	}
 
 	public function test_launch_check_rows_match_report() {

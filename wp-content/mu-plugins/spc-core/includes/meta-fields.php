@@ -64,6 +64,17 @@ function spc_field_definitions( string $post_type ): array {
 					'type'        => 'int',
 					'description' => __( 'お預かりからお返しまでの日数を数字だけで入力します（例：10）。', 'spc' ),
 				),
+				'spc_case_menu'       => array(
+					'label'       => __( '関連メニュー（任意）', 'spc' ),
+					'type'        => 'select',
+					'options'     => array(
+						'stain'     => __( '特殊シミ抜き', 'spc' ),
+						'yellowing' => __( '黄ばみ・汗汚れ', 'spc' ),
+						'down'      => __( '高級ダウン', 'spc' ),
+						'coat'      => __( 'コート・ジャケット', 'spc' ),
+					),
+					'description' => __( '下層ページの『関連する施工事例』に出すメニューを選びます。空欄なら下層ページには出ません（トップと施工事例の一覧には出ます）。', 'spc' ),
+				),
 				'spc_before_id'       => array(
 					'label'       => __( 'Before画像（施工前）', 'spc' ),
 					'type'        => 'image',
@@ -129,6 +140,8 @@ function spc_field_definitions( string $post_type ): array {
 						'price'    => __( '料金', 'spc' ),
 						'payment'  => __( 'お支払い', 'spc' ),
 						'photo'    => __( '写真相談', 'spc' ),
+						'stain'    => __( 'シミ抜き', 'spc' ),
+						'down'     => __( 'ダウン・コート', 'spc' ),
 						'other'    => __( 'その他', 'spc' ),
 					),
 					'description' => __( 'よくある質問ページで、どの見出しの下に並べるかを選びます。', 'spc' ),
