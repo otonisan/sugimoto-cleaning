@@ -440,11 +440,6 @@
 	margin-top: var(--space-48);
 }
 
-/* 墨地の上でも「仮」が読めるよう、仮バッジは白い下地に載せる */
-.spc-craftsmen .spc-ph-badge {
-	background: var(--color-paper);
-}
-
 .spc-craftsmen__base-title {
 	margin-top: var(--space-24);
 }

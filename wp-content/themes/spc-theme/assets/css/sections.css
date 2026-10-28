@@ -607,3 +607,9 @@
 		margin-top: var(--space-16);
 	}
 }
+
+/* 墨地の上でも「仮」が読めるよう、仮バッジは白い下地に載せる（トップと /about/ の職人セクション） */
+.spc-craftsmen .spc-ph-badge,
+.spc-about-craftsmen .spc-ph-badge {
+	background: var(--color-paper);
+}

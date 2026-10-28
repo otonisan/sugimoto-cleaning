@@ -1,8 +1,6 @@
 import { test, expect } from '@playwright/test';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
-import path from 'node:path';
 import { ctaLocations, expectNoHorizontalScroll, expectNoNgWords, jsonLdGraph } from './helpers/page-checks';
-import { wpCli } from './helpers/wp';
+import { setPostContent, wpCli } from './helpers/wp';
 
 const PATH = '/about/';
 const SUMI = 'rgb(35, 33, 30)'; // --color-sumi (#23211E)
@@ -13,19 +11,6 @@ const ORDER: Array<{ cls: string; tone: 'sumi' | 'paper' | 'mist' }> = [
   { cls: 'spc-about-workshop', tone: 'paper' },
   { cls: 'spc-about-company', tone: 'mist' },
 ];
-
-/** 固定ページの本文を、ファイル経由で（二重引用符を含む HTML でも）書き換える。 */
-function setPageContent(id: string, html: string): void {
-  // wp-env のコンテナに見えるのはテーマのフォルダだけ。一時ファイルはそこに置き、使い終わったら消す。
-  const dir = mkdtempSync(path.join(process.cwd(), 'wp-content', 'themes', 'spc-theme', 'tmp-about-'));
-  try {
-    writeFileSync(path.join(dir, 'content.html'), html, 'utf8');
-    const rel = `/var/www/html/wp-content/themes/spc-theme/${path.basename(dir)}/content.html`;
-    wpCli(['post', 'update', id, rel]);
-  } finally {
-    rmSync(dir, { recursive: true, force: true });
-  }
-}
 
 test.describe('職人・運営会社（/about/）', () => {
   test('h1は1つ、data-page-type="about"、セクションの順と地、墨地はページに1つだけ', async ({ page }) => {
@@ -125,13 +110,13 @@ test.describe('職人・運営会社（/about/）', () => {
     const original = wpCli(['post', 'get', id, '--field=post_content']);
     try {
       const long = 'あ'.repeat(40) + 'ABCDEFGHIJ'.repeat(4);
-      setPageContent(id, `<table><tbody><tr><th>所在地</th><td>${long}</td></tr><tr><th>会社名</th><td>有限会社杉本クリーニング商会</td></tr></tbody></table>`);
+      setPostContent(id, `<table><tbody><tr><th>所在地</th><td>${long}</td></tr><tr><th>会社名</th><td>有限会社杉本クリーニング商会</td></tr></tbody></table>`);
       await page.setViewportSize({ width: 375, height: 812 });
       await page.goto(PATH);
       await expect(page.locator('section.spc-about-company')).toContainText(long);
       await expectNoHorizontalScroll(page);
     } finally {
-      setPageContent(id, original);
+      setPostContent(id, original);
     }
   });
 
@@ -146,7 +131,7 @@ test.describe('職人・運営会社（/about/）', () => {
       await expect(page.getByRole('heading', { name: '会社概要' })).toHaveCount(0);
       await expect(page.locator('section.spc-about-craftsmen')).toHaveCount(1);
     } finally {
-      setPageContent(id, original);
+      setPostContent(id, original);
     }
   });
 

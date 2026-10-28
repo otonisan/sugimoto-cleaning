@@ -23,6 +23,19 @@ export function wpCli(args: string[]): string {
 }
 
 /**
+ * 投稿（固定ページなど）の本文を、任意のHTML（二重引用符を含んでもよい）に書き換える。
+ * HTML は Node で base64 にして PHP の単引用符の文字列で渡す（wpCli は二重引用符を受け付けないため）。ファイルは作らない。
+ */
+export function setPostContent(id: number | string, html: string): void {
+  const postId = Number(id);
+  if (!Number.isInteger(postId) || postId <= 0) {
+    throw new Error(`setPostContent: 投稿IDが不正です: ${id}`);
+  }
+  const b64 = Buffer.from(html, 'utf8').toString('base64');
+  wpCli(['eval', `wp_update_post( array( 'ID' => ${postId}, 'post_content' => base64_decode( '${b64}' ) ) );`]);
+}
+
+/**
  * ブランド設定（spc_settings）の1項目を書き換え、元に戻す関数を返す。
  * オプションや項目が元々なかった場合は、削除して元の状態に戻す。
  */
