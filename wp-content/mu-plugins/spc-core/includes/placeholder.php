@@ -149,7 +149,7 @@ function spc_required_pages(): array {
  * 公開前に差し替えが必要な項目の一覧。空なら公開OK。
  *
  * 各項目の形：array{type:string,label:string,edit_url:string}
- * - type：'post'（仮データの投稿・固定ページ）/ 'line_url' / 'line_qr' / 'brand_name' / 'gtm_id' / 'reply_time_note' / 'page_missing'（必要な固定ページが無い）
+ * - type：'post'（仮データの投稿・固定ページ）/ 'line_url' / 'line_qr' / 'brand_name' / 'gtm_id' / 'reply_time_note' / 'page_missing'（必要な固定ページが無い）/ 'page_unpublished'（必要な固定ページが下書きなど）/ 'page_placeholder_text'（必要な固定ページの本文に（仮）が残っている）
  *   ／フィルタ spc_placeholder_report で追加されるもの（テーマの仮画像は 'theme_image'）。
  * - label：管理画面・CLIにそのまま出す日本語の説明。
  * - edit_url：直す画面のURL。管理画面で直せないもの（テーマのファイル）は ''（リンクなし）。
@@ -183,18 +183,36 @@ function spc_placeholder_report(): array {
 		);
 	}
 
-	// 必要な固定ページ：決められたパスに無い、またはゴミ箱にあるものを知らせる。
+	// 必要な固定ページ：決められたパスに無い・ゴミ箱にある／公開されていない／本文に（仮）が残っているものを知らせる。
 	foreach ( spc_required_pages() as $path => $page_title ) {
 		$page = get_page_by_path( $path, OBJECT, 'page' );
-		if ( $page && 'trash' !== $page->post_status ) {
+		if ( ! $page || 'trash' === $page->post_status ) {
+			$report[] = array(
+				'type'     => 'page_missing',
+				/* translators: 1: ページ名 2: パス */
+				'label'    => sprintf( __( '必要な固定ページがありません：%1$s（/%2$s/）', 'spc' ), $page_title, $path ),
+				'edit_url' => admin_url( 'edit.php?post_type=page' ),
+			);
 			continue;
 		}
-		$report[] = array(
-			'type'     => 'page_missing',
-			/* translators: 1: ページ名 2: パス */
-			'label'    => sprintf( __( '必要な固定ページがありません：%1$s（/%2$s/）', 'spc' ), $page_title, $path ),
-			'edit_url' => admin_url( 'edit.php?post_type=page' ),
-		);
+		$edit_url = admin_url( 'post.php?post=' . $page->ID . '&action=edit' );
+		if ( 'publish' !== $page->post_status ) {
+			$report[] = array(
+				'type'     => 'page_unpublished',
+				/* translators: 1: ページ名 2: パス */
+				'label'    => sprintf( __( '必要な固定ページが公開されていません：%1$s（/%2$s/）', 'spc' ), $page_title, $path ),
+				'edit_url' => $edit_url,
+			);
+		}
+		// 仮データのチェックが付いたページは上の 'post' 項目で知らせているので、二重に出さない。
+		if ( false !== strpos( $page->post_content, '（仮）' ) && ! spc_is_placeholder( $page ) ) {
+			$report[] = array(
+				'type'     => 'page_placeholder_text',
+				/* translators: 1: ページ名 2: パス */
+				'label'    => sprintf( __( '固定ページの本文に『（仮）』が残っています：%1$s（/%2$s/）', 'spc' ), $page_title, $path ),
+				'edit_url' => $edit_url,
+			);
+		}
 	}
 
 	$settings_url = spc_settings_page_url();

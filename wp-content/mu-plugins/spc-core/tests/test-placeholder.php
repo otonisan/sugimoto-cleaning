@@ -245,6 +245,41 @@ class Test_Placeholder extends WP_UnitTestCase {
 		$this->assertSame( array( 'stain-removal', 'down-coat', 'price', 'about', 'guide', 'legal', 'legal/terms', 'legal/tokushoho', 'legal/privacy' ), array_keys( spc_required_pages() ) );
 	}
 
+	public function test_report_flags_unpublished_required_page() {
+		$this->good_settings();
+		$page = get_page_by_path( 'price' );
+		wp_update_post( array( 'ID' => $page->ID, 'post_status' => 'draft' ) );
+		$items = array_values( array_filter( spc_placeholder_report(), fn( $i ) => 'page_unpublished' === $i['type'] ) );
+		$this->assertCount( 1, $items );
+		$this->assertSame( '必要な固定ページが公開されていません：料金・送料（/price/）', $items[0]['label'] );
+		$this->assertSame( admin_url( 'post.php?post=' . $page->ID . '&action=edit' ), $items[0]['edit_url'] );
+		$this->assertSame( array(), array_filter( spc_placeholder_report(), fn( $i ) => 'page_missing' === $i['type'] ) );
+
+		wp_update_post( array( 'ID' => $page->ID, 'post_status' => 'publish' ) );
+		$this->assertSame( array(), array_filter( spc_placeholder_report(), fn( $i ) => 'page_unpublished' === $i['type'] ) );
+	}
+
+	public function test_report_flags_unflagged_required_page_with_placeholder_text() {
+		$this->good_settings();
+		$page = get_page_by_path( 'about' );
+		$types = fn() => wp_list_pluck( spc_placeholder_report(), 'type' );
+
+		// 本文がきれいなら何も出ない。
+		$this->assertNotContains( 'page_placeholder_text', $types() );
+
+		// 仮データのチェックが無いのに（仮）が残っている。
+		wp_update_post( array( 'ID' => $page->ID, 'post_content' => '準備中（仮）' ) );
+		$items = array_values( array_filter( spc_placeholder_report(), fn( $i ) => 'page_placeholder_text' === $i['type'] ) );
+		$this->assertCount( 1, $items );
+		$this->assertSame( '固定ページの本文に『（仮）』が残っています：' . $page->post_title . '（/about/）', $items[0]['label'] );
+		$this->assertSame( admin_url( 'post.php?post=' . $page->ID . '&action=edit' ), $items[0]['edit_url'] );
+
+		// 仮データのチェックが付いていれば、既存の post 項目に任せる。
+		update_post_meta( $page->ID, '_spc_is_placeholder', '1' );
+		$this->assertNotContains( 'page_placeholder_text', $types() );
+		$this->assertContains( 'post', $types() );
+	}
+
 	public function test_report_empty_when_everything_set() {
 		$this->good_settings();
 		$this->assertSame( array(), spc_placeholder_report() );
