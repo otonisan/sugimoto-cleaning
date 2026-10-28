@@ -96,7 +96,11 @@ class Test_Seed extends WP_UnitTestCase {
 		foreach ( array( 'stain-removal', 'down-coat', 'price', 'about', 'guide', 'legal' ) as $slug ) {
 			$page = get_page_by_path( $slug );
 			$this->assertNotNull( $page, $slug );
-			$this->assertSame( 'about' === $slug, '' !== $page->post_content, $slug );
+			if ( 'about' === $slug ) {
+				$this->assertNotSame( '', $page->post_content, $slug );
+			} else {
+				$this->assertSame( '', $page->post_content, $slug );
+			}
 		}
 		foreach ( array( 'terms' => 1, 'tokushoho' => 2, 'privacy' => 3 ) as $slug => $order ) {
 			$this->assertSame( $order, get_page_by_path( "legal/$slug" )->menu_order, $slug );
@@ -143,7 +147,8 @@ class Test_Seed extends WP_UnitTestCase {
 			$this->assertCount( 2, $faqs, $group );
 			foreach ( $faqs as $p ) {
 				// チェックボックス項目は '0' が空文字に整えられて保存される（トップに出ない）。
-			$this->assertNotSame( '1', get_post_meta( $p->ID, 'spc_show_on_top', true ) );
+				$this->assertTrue( metadata_exists( 'post', $p->ID, 'spc_show_on_top' ) );
+				$this->assertSame( '', get_post_meta( $p->ID, 'spc_show_on_top', true ) );
 				$this->assertStringEndsWith( '（仮）', $p->post_content );
 			}
 		}
@@ -195,6 +200,27 @@ class Test_Seed extends WP_UnitTestCase {
 		$this->assertSame( 0, spc_seed_run()['updated'] );
 		$this->assertFalse( metadata_exists( 'post', $case, 'spc_case_menu' ) );
 		$this->assertSame( '準備中（仮）', get_post( $about )->post_content );
+	}
+
+	public function test_seed_backfill_does_not_restore_unchecked_bool_meta() {
+		spc_seed_run();
+		$faq = spc_seed_find( 'faq-shipping' );
+		// 管理画面で未チェックにして保存したときと同じ（メタごと削除）。
+		delete_post_meta( $faq, 'spc_show_on_top' );
+		$this->assertSame( 0, spc_seed_run()['updated'] );
+		$this->assertFalse( metadata_exists( 'post', $faq, 'spc_show_on_top' ) );
+	}
+
+	public function test_seed_backfills_zero_menu_order_only() {
+		spc_seed_run();
+		$terms   = spc_seed_find( 'page-terms' );
+		$privacy = spc_seed_find( 'page-privacy' );
+		wp_update_post( array( 'ID' => $terms, 'menu_order' => 0 ) );
+		wp_update_post( array( 'ID' => $privacy, 'menu_order' => 9 ) );
+		$this->assertGreaterThanOrEqual( 1, spc_seed_run()['updated'] );
+		$this->assertSame( 1, get_post( $terms )->menu_order );
+		$this->assertSame( 9, get_post( $privacy )->menu_order );
+		$this->assertSame( 0, spc_seed_run()['updated'] );
 	}
 
 	public function test_seed_legal_skeletons_have_headings_and_no_articles() {

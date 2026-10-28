@@ -202,7 +202,8 @@ function spc_seed_find( string $key ): int {
 
 /**
  * 既存の仮データに、あとから増えた定義を足す。仮データのまま（_spc_is_placeholder=1）の投稿だけが対象。
- * - メタ：投稿にまったく値が無いキーだけを追加する（上書きしない）。
+ * - メタ：投稿にまったく値が無いキーだけを追加する（上書きしない。チェックボックス項目は補充しない）。
+ * - 表示順：0のままのときだけ定義の値を入れる。
  * - 本文：旧シードの値『準備中（仮）』と完全に一致するときだけ新しい本文に置き換える。
  *
  * @param int                 $id  投稿ID。
@@ -215,11 +216,28 @@ function spc_seed_backfill( int $id, array $def ): bool {
 	}
 	$changed = false;
 
+	$fields = spc_field_definitions( $def['post_type'] );
 	foreach ( $def['meta'] ?? array() as $key => $value ) {
+		// チェックボックス項目は、未チェックで保存するとメタごと消える。『未設定』と区別できないので補充しない。
+		if ( 'bool' === ( $fields[ $key ]['type'] ?? '' ) ) {
+			continue;
+		}
 		if ( ! metadata_exists( 'post', $id, $key ) ) {
 			update_post_meta( $id, $key, $value );
 			$changed = true;
 		}
+	}
+
+	// 表示順：0のままのときだけ定義の値を入れる（変更済みの順番は触らない）。
+	$order = (int) ( $def['menu_order'] ?? 0 );
+	if ( $order > 0 && 0 === (int) get_post_field( 'menu_order', $id ) ) {
+		wp_update_post(
+			array(
+				'ID'         => $id,
+				'menu_order' => $order,
+			)
+		);
+		$changed = true;
 	}
 
 	$new_content = (string) ( $def['post_content'] ?? '' );
