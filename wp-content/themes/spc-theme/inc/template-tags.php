@@ -213,6 +213,28 @@ function spc_lp_query( string $post_type, array $args = array() ): ?WP_Query {
 }
 
 /**
+ * 指定したメニューの施工事例のクエリ（最大3件）。0件、または spc-core が無いときは null。
+ * 特殊シミ抜き・高級ダウン/コートの「関連する施工事例」で使う。
+ *
+ * @param string[] $menus 施工事例のメニュー（spc_case_menu）。
+ */
+function spc_related_cases_query( array $menus ): ?WP_Query {
+	return spc_lp_query(
+		'spc_case',
+		array(
+			'posts_per_page' => 3,
+			'meta_query'     => array(
+				array(
+					'key'     => 'spc_case_menu',
+					'value'   => $menus,
+					'compare' => 'IN',
+				),
+			),
+		)
+	);
+}
+
+/**
  * よくある質問のクエリ。0件、または spc-core が無いときは null（spc_lp_query と同じ）。
  *
  * @param string[] $groups   分類（spc_faq_group）。空なら全分類。

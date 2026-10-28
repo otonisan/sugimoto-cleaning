@@ -251,4 +251,59 @@ class Test_ThemeSubpages extends WP_UnitTestCase {
 		$this->assertSame( array( $empty->ID, $unknown->ID ), wp_list_pluck( $grouped['other'], 'ID' ) );
 		$this->assertSame( array(), spc_group_faqs( array() ) );
 	}
+
+	public function test_production_excludes_placeholder_faq_and_legal_child() {
+		add_filter( 'spc_is_production', '__return_true' );
+		try {
+			$make = function ( string $title, bool $placeholder ): int {
+				return self::factory()->post->create(
+					array(
+						'post_type'  => 'spc_faq',
+						'post_title' => $title,
+						'meta_input' => array(
+							'spc_faq_group'       => 'stain',
+							'_spc_is_placeholder' => $placeholder ? '1' : '',
+						),
+					)
+				);
+			};
+			$make( '仮のFAQ', true );
+			$real = $make( '確定したFAQ', false );
+			$this->assertSame( array( $real ), wp_list_pluck( spc_faq_query( array( 'stain' ) )->posts, 'ID' ) );
+
+			$legal = get_page_by_path( 'legal' );
+			$fake  = self::factory()->post->create(
+				array(
+					'post_type'   => 'page',
+					'post_title'  => '仮の子ページ',
+					'post_parent' => $legal->ID,
+					'meta_input'  => array( '_spc_is_placeholder' => '1' ),
+				)
+			);
+			$query = spc_lp_query( 'page', array( 'post_parent' => $legal->ID, 'posts_per_page' => 20 ) );
+			$ids   = $query ? wp_list_pluck( $query->posts, 'ID' ) : array();
+			$this->assertNotContains( $fake, $ids );
+			$this->assertNotEmpty( $ids ); // 仮でない子ページ（規約など）は残る。
+		} finally {
+			remove_filter( 'spc_is_production', '__return_true' );
+		}
+	}
+
+	public function test_related_cases_query_filters_by_menu_and_limits_to_three() {
+		foreach ( array( 'stain', 'yellowing', 'stain', 'stain' ) as $i => $menu ) {
+			self::factory()->post->create(
+				array(
+					'post_type'  => 'spc_case',
+					'post_title' => 'S' . $i,
+					'meta_input' => array( 'spc_case_menu' => $menu ),
+				)
+			);
+		}
+		$down = self::factory()->post->create( array( 'post_type' => 'spc_case', 'meta_input' => array( 'spc_case_menu' => 'down' ) ) );
+
+		$q = spc_related_cases_query( array( 'stain', 'yellowing' ) );
+		$this->assertSame( 3, count( $q->posts ) );
+		$this->assertNotContains( $down, wp_list_pluck( $q->posts, 'ID' ) );
+		$this->assertNull( spc_related_cases_query( array( 'coat' ) ) );
+	}
 }

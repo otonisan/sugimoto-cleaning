@@ -104,6 +104,8 @@ test.describe('料金・送料（/price/）', () => {
       await expect(page.locator('section.spc-price-page-shipping')).toHaveCount(0);
       await expect(page.locator('section.spc-price-page-steps')).toHaveCount(1);
       await expect(page.locator('section.spc-price-page-payment')).toHaveCount(1);
+      // 表が出ないので、表を指す一文も出さない。
+      await expect(page.locator('section.spc-price-page-payment')).not.toContainText('「送料・手数料」の表');
       const empty = await page.locator('main h1, main h2, main h3').evaluateAll(
         (els) => els.filter((e) => (e.textContent ?? '').trim() === '').length,
       );

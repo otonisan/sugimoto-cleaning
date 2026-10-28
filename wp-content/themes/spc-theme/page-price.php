@@ -22,11 +22,25 @@ while ( have_posts() ) :
 	// TODO(仮): 文言は依頼元確認後に確定（送料・手数料の注記） [copy:price.shipping-note]
 	$spc_shipping_note = __( '離島など一部の地域は、送料が異なる場合があります。', 'spc' );
 
+	// 「送料・手数料」の表は料金が0件だと出ない。表が無いときは、表を指す一文を出さない。
+	$spc_has_shipping = null !== spc_lp_query(
+		'spc_price',
+		array(
+			'posts_per_page' => 1,
+			'meta_query'     => array(
+				array(
+					'key'   => 'spc_price_group',
+					'value' => 'shipping',
+				),
+			),
+		)
+	);
+
 	// TODO(仮): 文言は依頼元確認後に確定（お支払いとキャンセル） [copy:price.payment]
 	$spc_payment = array(
 		array( __( 'お支払いの時期', 'spc' ), __( '正式なお見積りをご承認いただいたあとです。', 'spc' ) ),
 		array( __( 'お支払い方法', 'spc' ), __( '決まりしだい掲載します。', 'spc' ) ),
-		array( __( 'お見積りのあとにお断りいただいた場合', 'spc' ), __( '施工はせずにお返しします。返送料は「送料・手数料」の表のとおりです。', 'spc' ) ),
+		array( __( 'お見積りのあとにお断りいただいた場合', 'spc' ), __( '施工はせずにお返しします。', 'spc' ) . ( $spc_has_shipping ? __( '返送料は「送料・手数料」の表のとおりです。', 'spc' ) : __( '返送料は正式なお見積りのときにお伝えします。', 'spc' ) ) ),
 	);
 
 	get_template_part(

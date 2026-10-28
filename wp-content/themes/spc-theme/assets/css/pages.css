@@ -31,6 +31,9 @@
 }
 
 .spc-breadcrumbs a {
+	display: inline-flex;
+	align-items: center;
+	min-height: var(--tap-min);
 	color: var(--color-stone);
 }
 
@@ -102,6 +105,13 @@
 .spc-subpage__item {
 	padding-block: var(--space-16);
 	border-top: 1px solid var(--color-line);
+}
+
+/* 規約・法定表示の一覧のリンク：タップできる高さ（DESIGN.md §9）を確保する */
+.spc-legal-list a {
+	display: flex;
+	align-items: center;
+	min-height: var(--tap-min);
 }
 
 .spc-subpage__note {

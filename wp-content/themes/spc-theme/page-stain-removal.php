@@ -133,19 +133,7 @@ while ( have_posts() ) :
 	);
 
 	// 該当する事例・FAQ が0件のときは null（部品に渡すと既定のクエリに戻ってしまうため、呼ばない）。
-	$spc_related_cases = spc_lp_query(
-		'spc_case',
-		array(
-			'posts_per_page' => 3,
-			'meta_query'     => array(
-				array(
-					'key'     => 'spc_case_menu',
-					'value'   => array( 'stain', 'yellowing' ),
-					'compare' => 'IN',
-				),
-			),
-		)
-	);
+	$spc_related_cases = spc_related_cases_query( array( 'stain', 'yellowing' ) );
 	if ( $spc_related_cases ) {
 		get_template_part(
 			'template-parts/sections/cases',
