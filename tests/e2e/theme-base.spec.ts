@@ -126,13 +126,20 @@ test.describe('テーマ基盤', () => {
     await expect(footer).toContainText(`© ${new Date().getFullYear()}`);
   });
 
-  test('固定ページ：h1は1つ、仮データには仮バッジ、下部にCTA', async ({ page }) => {
-    await page.goto('/price/');
-    await expect(page.locator('h1')).toHaveCount(1);
-    await expect(page.locator('h1')).toHaveText('料金・送料');
-    await expect(page.locator('.spc-page .spc-ph-badge')).toHaveText('仮');
-    await expect(page.locator('h1')).toHaveCSS('font-family', /Shippori Mincho/);
-    await expect(page.locator('main [data-cta-location="final"]')).toHaveCount(1);
+  test('固定ページ（汎用テンプレート page.php）：h1は1つ、仮データには仮バッジ、下部にCTA', async ({ page }) => {
+    // スラッグ別のテンプレートを持たない固定ページで確認する（/price/ などは専用テンプレートになった）。
+    const id = wpCli(['post', 'create', '--post_type=page', '--post_status=publish', '--post_name=e2e-generic', '--post_title=汎用ページ', '--post_content=本文', '--porcelain']);
+    try {
+      wpCli(['post', 'meta', 'update', id, '_spc_is_placeholder', '1']);
+      await page.goto('/e2e-generic/');
+      await expect(page.locator('h1')).toHaveCount(1);
+      await expect(page.locator('h1')).toHaveText('汎用ページ');
+      await expect(page.locator('.spc-page .spc-ph-badge')).toHaveText('仮');
+      await expect(page.locator('h1')).toHaveCSS('font-family', /Shippori Mincho/);
+      await expect(page.locator('main [data-cta-location="final"]')).toHaveCount(1);
+    } finally {
+      wpCli(['post', 'delete', id, '--force']);
+    }
   });
 
   test('404：日本語のメッセージ、トップへのリンク、CTAがある', async ({ page }) => {
