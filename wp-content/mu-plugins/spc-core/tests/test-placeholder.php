@@ -453,10 +453,13 @@ class Test_Placeholder extends WP_UnitTestCase {
 		$this->good_settings();
 
 		$images = spc_theme_placeholder_images();
-		$this->assertSame( array( 'hero', 'menu_stain', 'menu_yellowing', 'menu_down', 'menu_coat', 'workshop' ), array_keys( $images ) );
+		// 下層ページの写真枠は後ろに足されていく。ここでは数を決め打ちしない。
+		$this->assertSame( array( 'hero', 'menu_stain', 'menu_yellowing', 'menu_down', 'menu_coat', 'workshop' ), array_slice( array_keys( $images ), 0, 6 ) );
+		$this->assertContains( 'stain_work', array_keys( $images ) );
+		$this->assertContains( 'stain_yellowing', array_keys( $images ) );
 
 		$report = spc_placeholder_report();
-		$this->assertCount( 6, $report );
+		$this->assertCount( count( $images ), $report );
 		$this->assertSame( array( 'theme_image' ), array_values( array_unique( wp_list_pluck( $report, 'type' ) ) ) );
 		$this->assertSame( 'トップ画像（繊維マクロ写真）がまだ仮の枠です（制作側でテーマを差し替え：template-parts/lp/hero.php）', $report[0]['label'] );
 		$this->assertSame( '', $report[0]['edit_url'] );
@@ -471,7 +474,7 @@ class Test_Placeholder extends WP_UnitTestCase {
 			}
 		);
 		$this->assertSame( $img, spc_theme_image_id( 'hero' ) );
-		$this->assertCount( 5, spc_placeholder_report() );
+		$this->assertCount( count( $images ) - 1, spc_placeholder_report() );
 		$this->assertSame( 0, spc_theme_image_id( 'unknown' ) );
 	}
 

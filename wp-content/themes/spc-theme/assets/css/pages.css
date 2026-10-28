@@ -86,3 +86,51 @@
 		padding-right: var(--space-24);
 	}
 }
+
+/* ---------- 特殊シミ抜き（/stain-removal/）：相談できるシミの例・落ちやすさ・黄ばみ・汗汚れ ---------- */
+.spc-stain-examples__list {
+	padding: 0;
+	list-style: none;
+	border-bottom: 1px solid var(--color-line);
+}
+
+.spc-stain-examples__item {
+	padding-block: var(--space-16);
+	border-top: 1px solid var(--color-line);
+}
+
+.spc-stain-examples__note {
+	max-width: var(--measure);
+	margin-top: var(--space-24);
+}
+
+.spc-stain-factors__list {
+	border-bottom: 1px solid var(--color-line);
+}
+
+.spc-stain-factors__item {
+	padding-block: var(--space-16);
+	border-top: 1px solid var(--color-line);
+}
+
+.spc-stain-factors__item dt {
+	font-weight: 500;
+}
+
+.spc-stain-factors__item dd {
+	max-width: var(--measure);
+	margin-top: var(--space-8);
+	margin-left: 0;
+}
+
+.spc-stain-yellowing__text {
+	max-width: var(--measure);
+}
+
+.spc-stain-yellowing__text p + p {
+	margin-top: var(--space-16);
+}
+
+.spc-stain__photo {
+	margin-top: var(--space-32);
+}

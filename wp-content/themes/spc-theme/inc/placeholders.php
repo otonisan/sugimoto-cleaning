@@ -47,6 +47,16 @@ function spc_theme_placeholder_images(): array {
 			'label'         => __( '職人と施工母体の作業風景の写真', 'spc' ),
 			'file'          => 'template-parts/lp/craftsmen.php',
 		),
+		'stain_work'     => array(
+			'attachment_id' => 0,
+			'label'         => __( '特殊シミ抜き「手元・作業」の写真', 'spc' ),
+			'file'          => 'page-stain-removal.php',
+		),
+		'stain_yellowing' => array(
+			'attachment_id' => 0,
+			'label'         => __( '特殊シミ抜き「黄ばみ・汗汚れ」の写真', 'spc' ),
+			'file'          => 'page-stain-removal.php',
+		),
 	);
 
 	/**
@@ -147,6 +157,26 @@ function spc_theme_placeholder_copy(): array {
 		'common.cta-block' => array(
 			'label'     => __( 'ページ下部の相談ブロック', 'spc' ),
 			'file'      => 'inc/template-tags.php',
+			'confirmed' => false,
+		),
+		'stain.lead'       => array(
+			'label'     => __( '特殊シミ抜き「リード文」', 'spc' ),
+			'file'      => 'page-stain-removal.php',
+			'confirmed' => false,
+		),
+		'stain.examples'   => array(
+			'label'     => __( '特殊シミ抜き「相談できるシミの例」', 'spc' ),
+			'file'      => 'page-stain-removal.php',
+			'confirmed' => false,
+		),
+		'stain.factors'    => array(
+			'label'     => __( '特殊シミ抜き「落ちやすさを左右するもの」', 'spc' ),
+			'file'      => 'page-stain-removal.php',
+			'confirmed' => false,
+		),
+		'stain.yellowing'  => array(
+			'label'     => __( '特殊シミ抜き「黄ばみ・汗汚れ」', 'spc' ),
+			'file'      => 'page-stain-removal.php',
 			'confirmed' => false,
 		),
 	);

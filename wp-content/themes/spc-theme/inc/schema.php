@@ -136,6 +136,15 @@ function spc_schema_graph(): array {
 	// if ( 'service' === $page_type && 'stain-removal' === $slug ) { $graph[] = spc_schema_service( …, … ); }
 	$page_type = spc_page_type();
 	$slug      = is_page() ? (string) get_post_field( 'post_name', get_queried_object_id() ) : '';
+	if ( 'service' === $page_type && 'stain-removal' === $slug ) {
+		$service               = spc_schema_service( '特殊シミ抜き', '他店で落ちなかったシミ、時間がたったシミなどのご相談を、写真で承ります。' );
+		$service['areaServed'] = 'JP';
+		$graph[]               = $service;
+		$stain_faqs            = spc_faq_query( array( 'stain' ) );
+		if ( $stain_faqs ) {
+			$graph[] = spc_schema_faq_page( $stain_faqs, get_permalink( get_queried_object_id() ) . '#faq' );
+		}
+	}
 	// ---- ページごとの追加ここまで ------------------------------------------------
 
 	return $graph;
