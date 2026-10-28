@@ -350,7 +350,9 @@
 	overflow-wrap: anywhere;
 }
 
-.spc-price__disclaimer {
+.spc-price__disclaimer,
+.spc-price__footnote {
+	overflow-wrap: anywhere;
 	max-width: var(--measure);
 	margin-top: var(--space-32);
 	color: var(--color-stone);

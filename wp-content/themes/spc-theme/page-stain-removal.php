@@ -55,12 +55,12 @@ while ( have_posts() ) :
 					<h2 id="spc-stain-examples-title"><?php esc_html_e( '相談できるシミの例', 'spc' ); ?></h2>
 				</div>
 				<div class="spc-split__body">
-					<ul class="spc-stain-examples__list" role="list">
+					<ul class="spc-subpage__list" role="list">
 						<?php foreach ( $spc_examples as $spc_example ) : ?>
-							<li class="spc-stain-examples__item"><?php echo esc_html( $spc_example ); ?></li>
+							<li class="spc-subpage__item"><?php echo esc_html( $spc_example ); ?></li>
 						<?php endforeach; ?>
 					</ul>
-					<p class="spc-stain-examples__note"><?php esc_html_e( '写真を拝見して、落とせる可能性をお伝えします。', 'spc' ); ?></p>
+					<p class="spc-subpage__note"><?php esc_html_e( '写真を拝見して、落とせる可能性をお伝えします。', 'spc' ); ?></p>
 				</div>
 			</div>
 		</section>
@@ -71,9 +71,9 @@ while ( have_posts() ) :
 					<h2 id="spc-stain-factors-title"><?php esc_html_e( '落ちやすさを左右するもの', 'spc' ); ?></h2>
 				</div>
 				<div class="spc-split__body">
-					<dl class="spc-stain-factors__list">
+					<dl class="spc-subpage__defs">
 						<?php foreach ( $spc_factors as $spc_factor ) : ?>
-							<div class="spc-stain-factors__item">
+							<div class="spc-subpage__def">
 								<dt><?php echo esc_html( $spc_factor[0] ); ?></dt>
 								<dd><?php echo esc_html( $spc_factor[1] ); ?></dd>
 							</div>
@@ -96,7 +96,7 @@ while ( have_posts() ) :
 				</div>
 				<div class="spc-split__body">
 					<?php // TODO(仮): 文言は依頼元確認後に確定 [copy:stain.yellowing] ?>
-					<div class="spc-stain-yellowing__text">
+					<div class="spc-subpage__text">
 						<p><?php esc_html_e( '襟や脇、袖口などに出る黄ばみや汗汚れも、特殊シミ抜きの対象としてご相談いただけます。', 'spc' ); ?></p>
 						<p><?php esc_html_e( '時間がたつと生地になじみ、色が戻りにくくなることがあります。気になりはじめた段階で、一度写真をお送りください。', 'spc' ); ?></p>
 						<p><?php esc_html_e( '落とせる範囲は素材や状態によって変わるため、写真を拝見したうえでお伝えします。', 'spc' ); ?></p>

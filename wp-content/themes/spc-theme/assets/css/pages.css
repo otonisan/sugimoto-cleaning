@@ -87,63 +87,55 @@
 	}
 }
 
-/* ---------- 特殊シミ抜き（/stain-removal/）：相談できるシミの例・落ちやすさ・黄ばみ・汗汚れ ---------- */
-.spc-stain-examples__list,
-.spc-down-list {
+/* ---------- 下層ページ共通の本文部品（特殊シミ抜き・高級ダウン・コート・料金・送料で共用） ---------- */
+.spc-subpage__list {
 	padding: 0;
 	list-style: none;
 	border-bottom: 1px solid var(--color-line);
 }
 
-.spc-stain-examples__item,
-.spc-down-list__item {
+.spc-subpage__item {
 	padding-block: var(--space-16);
 	border-top: 1px solid var(--color-line);
 }
 
-.spc-stain-examples__note {
+.spc-subpage__note {
 	max-width: var(--measure);
 	margin-top: var(--space-24);
 }
 
-.spc-stain-factors__list,
-.spc-down-checkpoints__list {
+.spc-subpage__defs {
 	border-bottom: 1px solid var(--color-line);
 }
 
-.spc-stain-factors__item,
-.spc-down-checkpoints__item {
+.spc-subpage__def {
 	padding-block: var(--space-16);
 	border-top: 1px solid var(--color-line);
 }
 
-.spc-stain-factors__item dt,
-.spc-down-checkpoints__item dt {
+.spc-subpage__def dt {
 	font-weight: 500;
 }
 
-.spc-stain-factors__item dd,
-.spc-down-checkpoints__item dd {
+.spc-subpage__def dd {
 	max-width: var(--measure);
 	margin-top: var(--space-8);
 	margin-left: 0;
+	overflow-wrap: anywhere;
 }
 
-.spc-stain-yellowing__text,
-.spc-down__text {
+.spc-subpage__text {
 	max-width: var(--measure);
 }
 
-.spc-stain-yellowing__text p + p,
-.spc-down__text p + p {
+.spc-subpage__text p + p {
 	margin-top: var(--space-16);
+}
+
+.spc-subpage__text + .spc-subpage__list {
+	margin-top: var(--space-24);
 }
 
 .spc-subpage__photo {
 	margin-top: var(--space-32);
-}
-
-/* ---------- 高級ダウン・コート（/down-coat/）：確認点・ダウン・コート・お送りいただく前に ---------- */
-.spc-down__text + .spc-down-list {
-	margin-top: var(--space-24);
 }

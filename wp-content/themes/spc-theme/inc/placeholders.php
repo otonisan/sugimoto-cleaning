@@ -224,6 +224,21 @@ function spc_theme_placeholder_copy(): array {
 			'file'      => 'inc/schema.php',
 			'confirmed' => false,
 		),
+		'price.lead' => array(
+			'label'     => __( '料金・送料「リード文」', 'spc' ),
+			'file'      => 'page-price.php',
+			'confirmed' => false,
+		),
+		'price.shipping-note' => array(
+			'label'     => __( '料金・送料「送料・手数料の注記」', 'spc' ),
+			'file'      => 'page-price.php',
+			'confirmed' => false,
+		),
+		'price.payment' => array(
+			'label'     => __( '料金・送料「お支払いとキャンセル」', 'spc' ),
+			'file'      => 'page-price.php',
+			'confirmed' => false,
+		),
 	);
 
 	/**

@@ -5,7 +5,7 @@
  * 「写真で概算 → 現物を拝見して正式見積 → ご承認後に施工」の仕組みを先に見せる。
  * 金額はすべて仮（料金CPTの仮データ）。0件のときはセクションごと出さない。
  *
- * @var array{tone?:string,id?:string,heading?:string,heading_id?:string,groups?:string[],show_steps?:bool,more_link?:bool,show_disclaimer?:bool} $args
+ * @var array{tone?:string,id?:string,heading?:string,heading_id?:string,groups?:string[],show_steps?:bool,more_link?:bool,show_disclaimer?:bool,caption_hidden?:bool,extra_class?:string,footnote?:string} $args
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -21,6 +21,9 @@ $spc_args = wp_parse_args(
 		'show_steps'      => true,
 		'more_link'       => true,
 		'show_disclaimer' => true,
+		'caption_hidden'  => false,
+		'extra_class'     => '',
+		'footnote'        => '',
 	)
 );
 $spc_section_id = '' !== (string) $spc_args['id'] ? ' id="' . esc_attr( (string) $spc_args['id'] ) . '"' : '';
@@ -64,25 +67,17 @@ if ( ! $spc_tables ) {
 	return;
 }
 ?>
-<section<?php echo $spc_section_id; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- 上でエスケープ済み ?> class="spc-section<?php echo esc_attr( $spc_tone_class ); ?> spc-price" aria-labelledby="<?php echo esc_attr( (string) $spc_args['heading_id'] ); ?>">
+<section<?php echo $spc_section_id; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- 上でエスケープ済み ?> class="spc-section<?php echo esc_attr( $spc_tone_class ); ?> spc-price<?php echo '' !== (string) $spc_args['extra_class'] ? ' ' . esc_attr( (string) $spc_args['extra_class'] ) : ''; ?>" aria-labelledby="<?php echo esc_attr( (string) $spc_args['heading_id'] ); ?>">
 	<div class="spc-container">
 		<h2 id="<?php echo esc_attr( (string) $spc_args['heading_id'] ); ?>" class="spc-price__title"><?php echo esc_html( (string) $spc_args['heading'] ); ?></h2>
 		<?php if ( $spc_args['show_steps'] ) : ?>
-			<ol class="spc-price__steps" role="list">
-				<?php foreach ( spc_price_steps() as $spc_i => $spc_step ) : ?>
-					<li class="spc-price__step">
-						<span class="spc-price__step-num" aria-hidden="true"><?php echo esc_html( (string) ( $spc_i + 1 ) ); ?></span>
-						<p class="spc-price__step-label"><?php echo esc_html( $spc_step[0] ); ?></p>
-						<p class="spc-price__step-text"><?php echo esc_html( $spc_step[1] ); ?></p>
-					</li>
-				<?php endforeach; ?>
-			</ol>
+			<?php get_template_part( 'template-parts/price-steps' ); ?>
 		<?php endif; ?>
 
 		<div class="spc-price__tables">
 			<?php foreach ( $spc_tables as $spc_table ) : ?>
 				<table class="spc-price__table" id="<?php echo esc_attr( $spc_table['id'] ); ?>">
-					<caption class="spc-price__caption"><?php echo esc_html( $spc_table['caption'] ); ?></caption>
+					<caption class="spc-price__caption<?php echo $spc_args['caption_hidden'] ? ' screen-reader-text' : ''; ?>"><?php echo esc_html( $spc_table['caption'] ); ?></caption>
 					<thead>
 						<tr>
 							<th scope="col"><?php echo esc_html( $spc_table['head'] ); ?></th>
@@ -106,6 +101,9 @@ if ( ! $spc_tables ) {
 			<?php endforeach; ?>
 		</div>
 
+		<?php if ( '' !== trim( (string) $spc_args['footnote'] ) ) : ?>
+			<p class="spc-price__footnote"><?php echo esc_html( (string) $spc_args['footnote'] ); ?></p>
+		<?php endif; ?>
 		<?php if ( $spc_args['show_disclaimer'] ) : ?>
 			<p class="spc-price__disclaimer"><?php esc_html_e( '表示は目安です。素材や状態によって変わります。正式な金額は現物を拝見してからお伝えします。', 'spc' ); ?></p>
 		<?php endif; ?>

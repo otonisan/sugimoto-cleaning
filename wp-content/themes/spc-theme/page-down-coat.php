@@ -69,9 +69,9 @@ while ( have_posts() ) :
 					<h2 id="spc-down-checkpoints-title"><?php esc_html_e( '品目ごとの確認点', 'spc' ); ?></h2>
 				</div>
 				<div class="spc-split__body">
-					<dl class="spc-down-checkpoints__list">
+					<dl class="spc-subpage__defs">
 						<?php foreach ( $spc_checkpoints as $spc_checkpoint ) : ?>
-							<div class="spc-down-checkpoints__item">
+							<div class="spc-subpage__def">
 								<dt><?php echo esc_html( $spc_checkpoint[0] ); ?></dt>
 								<dd><?php echo esc_html( $spc_checkpoint[1] ); ?></dd>
 							</div>
@@ -87,14 +87,14 @@ while ( have_posts() ) :
 					<h2 id="spc-down-down-title"><?php esc_html_e( '高級ダウン', 'spc' ); ?></h2>
 				</div>
 				<div class="spc-split__body">
-					<div class="spc-down__text">
+					<div class="spc-subpage__text">
 						<?php foreach ( $spc_down_text as $spc_paragraph ) : ?>
 							<p><?php echo esc_html( $spc_paragraph ); ?></p>
 						<?php endforeach; ?>
 					</div>
-					<ul class="spc-down-list" role="list">
+					<ul class="spc-subpage__list" role="list">
 						<?php foreach ( $spc_down_check as $spc_item ) : ?>
-							<li class="spc-down-list__item"><?php echo esc_html( $spc_item ); ?></li>
+							<li class="spc-subpage__item"><?php echo esc_html( $spc_item ); ?></li>
 						<?php endforeach; ?>
 					</ul>
 					<div class="spc-subpage__photo">
@@ -113,7 +113,7 @@ while ( have_posts() ) :
 					<h2 id="spc-down-coat-title"><?php esc_html_e( 'コート・ジャケット', 'spc' ); ?></h2>
 				</div>
 				<div class="spc-split__body">
-					<div class="spc-down__text">
+					<div class="spc-subpage__text">
 						<?php foreach ( $spc_coat_text as $spc_paragraph ) : ?>
 							<p><?php echo esc_html( $spc_paragraph ); ?></p>
 						<?php endforeach; ?>
@@ -134,9 +134,9 @@ while ( have_posts() ) :
 					<h2 id="spc-down-before-title"><?php esc_html_e( 'お送りいただく前に', 'spc' ); ?></h2>
 				</div>
 				<div class="spc-split__body">
-					<ul class="spc-down-list" role="list">
+					<ul class="spc-subpage__list" role="list">
 						<?php foreach ( $spc_before as $spc_item ) : ?>
-							<li class="spc-down-list__item"><?php echo esc_html( $spc_item ); ?></li>
+							<li class="spc-subpage__item"><?php echo esc_html( $spc_item ); ?></li>
 						<?php endforeach; ?>
 					</ul>
 				</div>
