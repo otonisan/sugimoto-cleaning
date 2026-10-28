@@ -36,7 +36,7 @@ if ( ! $spc_faqs || ! $spc_faqs->have_posts() ) {
 		</div>
 		<div class="spc-split__body">
 			<div class="spc-faq__list">
-				<?php if ( $spc_args['grouped'] ) : ?>
+<?php if ( $spc_args['grouped'] ) : ?>
 					<?php
 					$spc_group_labels = spc_faq_group_labels();
 					foreach ( spc_group_faqs( $spc_faqs->posts ) as $spc_group_key => $spc_group_posts ) :
@@ -68,7 +68,7 @@ if ( ! $spc_faqs || ! $spc_faqs->have_posts() ) {
 				endwhile;
 				wp_reset_postdata();
 				?>
-				<?php endif; ?>
+<?php endif; ?>
 			</div>
 			<?php if ( $spc_args['more_link'] ) : ?>
 				<p class="spc-faq__more"><a href="<?php echo esc_url( home_url( '/guide/#faq' ) ); ?>"><?php esc_html_e( 'よくある質問をすべて見る', 'spc' ); ?></a></p>
