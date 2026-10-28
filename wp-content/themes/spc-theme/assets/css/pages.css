@@ -56,7 +56,8 @@
 }
 
 /* ---------- 表（会社概要・特商法）：横罫線のみ。項目名の列は SP 7em／PC 10em（余白込み）。SP でも横並びのまま折り返す ---------- */
-.spc-table {
+.spc-table,
+.spc-table-content table {
 	width: 100%;
 	border-collapse: collapse;
 	border-top: 1px solid var(--color-line);
@@ -65,7 +66,9 @@
 }
 
 .spc-table th,
-.spc-table td {
+.spc-table td,
+.spc-table-content th,
+.spc-table-content td {
 	padding: var(--space-16) 0;
 	border-bottom: 1px solid var(--color-line);
 	text-align: left;
@@ -73,7 +76,8 @@
 	overflow-wrap: anywhere;
 }
 
-.spc-table th {
+.spc-table th,
+.spc-table-content th {
 	width: 7em;
 	padding-right: var(--space-16);
 	font-weight: 500;
@@ -81,7 +85,8 @@
 
 /* 文字の大きさと同じく、768px 以上を PC の値にする */
 @media (min-width: 768px) {
-	.spc-table th {
+	.spc-table th,
+	.spc-table-content th {
 		width: 10em;
 		padding-right: var(--space-24);
 	}
@@ -233,5 +238,52 @@
 	.spc-diagnosis--wide .spc-diagnosis__rows {
 		align-self: start;
 		padding: var(--space-16) var(--space-32) var(--space-32);
+	}
+}
+
+/* ---------- 職人・運営会社（/about/） ---------- */
+/* 墨地の上でも「仮」が読めるよう、仮バッジは白い下地に載せる */
+.spc-about-craftsmen .spc-ph-badge {
+	background: var(--color-paper);
+}
+
+.spc-about-craftsmen__lead {
+	max-width: var(--measure-lead);
+	margin-top: var(--space-16);
+	font-size: var(--text-lead);
+	line-height: var(--leading-lead);
+	word-break: auto-phrase;
+}
+
+.spc-about-craftsmen__list {
+	margin-top: var(--space-48);
+}
+
+.spc-about-workshop__photos {
+	display: grid;
+	gap: var(--space-24);
+	margin-top: var(--space-32);
+	padding: 0;
+	list-style: none;
+}
+
+.spc-about-workshop__figure figcaption {
+	margin-top: var(--space-8);
+	font-size: var(--text-small);
+	line-height: var(--leading-small);
+}
+
+.spc-about-workshop__text {
+	margin-top: var(--space-32);
+}
+
+.spc-about-company__body {
+	margin-top: var(--space-24);
+}
+
+@media (min-width: 768px) {
+	.spc-about-workshop__photos {
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: var(--gutter);
 	}
 }

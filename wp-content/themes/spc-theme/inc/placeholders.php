@@ -67,6 +67,21 @@ function spc_theme_placeholder_images(): array {
 			'label'         => __( 'コート・ジャケット「生地・ボタンまわり」の写真', 'spc' ),
 			'file'          => 'page-down-coat.php',
 		),
+		'about_workshop' => array(
+			'attachment_id' => 0,
+			'label'         => __( '職人・運営会社「作業場の全景」の写真', 'spc' ),
+			'file'          => 'page-about.php',
+		),
+		'about_hands'    => array(
+			'attachment_id' => 0,
+			'label'         => __( '職人・運営会社「手元の作業」の写真', 'spc' ),
+			'file'          => 'page-about.php',
+		),
+		'about_equipment' => array(
+			'attachment_id' => 0,
+			'label'         => __( '職人・運営会社「設備」の写真', 'spc' ),
+			'file'          => 'page-about.php',
+		),
 	);
 
 	/**
@@ -222,6 +237,21 @@ function spc_theme_placeholder_copy(): array {
 		'down.schema' => array(
 			'label'     => __( '高級ダウン・コート「構造化データの説明文」', 'spc' ),
 			'file'      => 'inc/schema.php',
+			'confirmed' => false,
+		),
+		'about.lead' => array(
+			'label'     => __( '職人・運営会社「リード文」', 'spc' ),
+			'file'      => 'page-about.php',
+			'confirmed' => false,
+		),
+		'about.staff' => array(
+			'label'     => __( '職人・運営会社「施工する職人の導入文」', 'spc' ),
+			'file'      => 'page-about.php',
+			'confirmed' => false,
+		),
+		'about.workshop' => array(
+			'label'     => __( '職人・運営会社「作業場」', 'spc' ),
+			'file'      => 'page-about.php',
 			'confirmed' => false,
 		),
 		'price.lead' => array(

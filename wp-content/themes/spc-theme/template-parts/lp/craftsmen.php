@@ -17,38 +17,7 @@ $spc_staff = spc_lp_query( 'spc_staff', array( 'posts_per_page' => 4 ) );
 
 		<div class="spc-craftsmen__body">
 			<?php if ( $spc_staff ) : ?>
-				<ul class="spc-craftsmen__staff" role="list">
-					<?php
-					while ( $spc_staff->have_posts() ) :
-						$spc_staff->the_post();
-						$spc_role = trim( (string) get_post_meta( get_the_ID(), 'spc_role', true ) );
-						$spc_bio  = trim( (string) get_post_meta( get_the_ID(), 'spc_bio', true ) );
-						?>
-						<li class="spc-craftsmen__person">
-							<div class="spc-craftsmen__photo">
-								<?php
-								// TODO(仮): 職人本人の実写（4:5）に差し替え。ストックフォト・AI生成画像は使わない（DESIGN.md §5）。
-								spc_image_or_placeholder( (int) get_post_thumbnail_id(), 'spc-portrait', '職人の顔写真 4:5', '4/5' );
-								?>
-							</div>
-							<div class="spc-craftsmen__profile">
-								<div class="spc-craftsmen__name-row">
-									<h3 class="spc-craftsmen__name"><?php echo esc_html( wp_strip_all_tags( get_the_title() ) ); ?></h3>
-									<?php spc_placeholder_badge(); ?>
-								</div>
-								<?php if ( '' !== $spc_role ) : ?>
-									<p class="spc-craftsmen__role"><?php echo esc_html( $spc_role ); ?></p>
-								<?php endif; ?>
-								<?php if ( '' !== $spc_bio ) : ?>
-									<p class="spc-craftsmen__bio"><?php echo nl2br( esc_html( $spc_bio ) ); ?></p>
-								<?php endif; ?>
-							</div>
-						</li>
-						<?php
-					endwhile;
-					wp_reset_postdata();
-					?>
-				</ul>
+				<?php get_template_part( 'template-parts/staff-list', null, array( 'query' => $spc_staff ) ); ?>
 			<?php endif; ?>
 
 			<div class="spc-craftsmen__base">

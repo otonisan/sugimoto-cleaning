@@ -181,6 +181,24 @@ function spc_schema_graph(): array {
 			}
 		}
 	}
+	if ( 'about' === $page_type ) {
+		// 職人ごとの Person（ページの職人一覧と同じクエリ）。住所・電話は書かない。
+		$staff = spc_lp_query( 'spc_staff', array( 'posts_per_page' => -1 ) );
+		if ( $staff ) {
+			foreach ( $staff->posts as $member ) {
+				$person = array(
+					'@type'    => 'Person',
+					'name'     => spc_schema_text( get_the_title( $member ) ),
+					'worksFor' => array( '@id' => home_url( '/#organization' ) ),
+				);
+				$role   = spc_schema_text( (string) get_post_meta( $member->ID, 'spc_role', true ) );
+				if ( '' !== $role ) {
+					$person['jobTitle'] = $role;
+				}
+				$graph[] = $person;
+			}
+		}
+	}
 	if ( 'case' === $page_type && is_singular( 'spc_case' ) ) {
 		$graph[] = spc_schema_case_article( get_queried_object() );
 	}
