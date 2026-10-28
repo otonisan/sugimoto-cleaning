@@ -88,6 +88,33 @@ function spc_schema_service( string $name, string $description ): array {
 }
 
 /**
+ * 施工事例の Article。画像は施工後 → 施工前の順で、あるほうのURL。無ければ image は出さない。
+ *
+ * @return array<string,mixed>
+ */
+function spc_schema_case_article( WP_Post $post ): array {
+	$article = array(
+		'@type'            => 'Article',
+		'headline'         => spc_schema_text( get_the_title( $post ) ),
+		'datePublished'    => get_the_date( 'c', $post ),
+		'dateModified'     => get_the_modified_date( 'c', $post ),
+		'publisher'        => array( '@id' => home_url( '/#organization' ) ),
+		'mainEntityOfPage' => get_permalink( $post ),
+	);
+	foreach ( array( 'spc_after_id', 'spc_before_id' ) as $key ) {
+		$image_id = absint( get_post_meta( $post->ID, $key, true ) );
+		if ( spc_has_image( $image_id ) ) {
+			$url = wp_get_attachment_image_url( $image_id, 'full' );
+			if ( $url ) {
+				$article['image'] = $url;
+				break;
+			}
+		}
+	}
+	return $article;
+}
+
+/**
  * トップの @graph（運営会社・ブランド・FAQ）。
  *
  * @return array<int,array<string,mixed>>
@@ -153,6 +180,9 @@ function spc_schema_graph(): array {
 				$graph[] = spc_schema_faq_page( $service_faqs, get_permalink( get_queried_object_id() ) . '#faq' );
 			}
 		}
+	}
+	if ( 'case' === $page_type && is_singular( 'spc_case' ) ) {
+		$graph[] = spc_schema_case_article( get_queried_object() );
 	}
 	// ---- ページごとの追加ここまで ------------------------------------------------
 

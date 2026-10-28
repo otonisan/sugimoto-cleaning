@@ -340,3 +340,37 @@ function spc_nav_menu_fallback( array $args ): void {
 	}
 	echo '</ul>';
 }
+
+/**
+ * 前後の施工事例（公開中。本番では仮データを除く）。一覧と同じ並び（新しい順）で、
+ * 「前」は1つ古い事例、「次」は1つ新しい事例。無ければ null。
+ */
+function spc_adjacent_case( int $post_id, bool $previous ): ?WP_Post {
+	if ( ! function_exists( 'spc_query_args' ) ) {
+		return null;
+	}
+	$ids = get_posts(
+		spc_query_args(
+			'spc_case',
+			array(
+				'posts_per_page' => -1,
+				'fields'         => 'ids',
+				'orderby'        => array(
+					'date' => 'DESC',
+					'ID'   => 'DESC',
+				),
+				'no_found_rows'  => true,
+			)
+		)
+	);
+	$index = array_search( $post_id, array_map( 'intval', $ids ), true );
+	if ( false === $index ) {
+		return null;
+	}
+	$target = $previous ? $index + 1 : $index - 1;
+	if ( ! isset( $ids[ $target ] ) ) {
+		return null;
+	}
+	$post = get_post( (int) $ids[ $target ] );
+	return $post instanceof WP_Post ? $post : null;
+}

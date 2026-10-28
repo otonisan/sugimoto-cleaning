@@ -49,3 +49,22 @@ export function setSpcSetting(key: string, value: string): () => void {
     }
   };
 }
+
+/** 公開中の施工事例のID。 */
+export function publishedCaseIds(): string[] {
+  const out = wpCli(['post', 'list', '--post_type=spc_case', '--post_status=publish', '--format=ids']);
+  return out.split(/\s+/).filter(Boolean);
+}
+
+/** 投稿をゴミ箱に入れる。WP-CLI の post delete は投稿・固定ページ以外をゴミ箱に入れられないため、wp_trash_post を使う。 */
+export function trash(ids: string[]): void {
+  wpCli(['eval', `array_map('wp_trash_post',array(${ids.join(',')}));`]);
+}
+
+/** ゴミ箱の投稿を元の公開状態に戻す（WP 5.6 以降は既定で下書きに戻るため、フィルタで元の状態を使う）。 */
+export function untrash(ids: string[]): void {
+  wpCli([
+    'eval',
+    `add_filter('wp_untrash_post_status','wp_untrash_post_set_previous_status',10,3);array_map('wp_untrash_post',array(${ids.join(',')}));`,
+  ]);
+}

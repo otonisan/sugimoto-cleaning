@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-import { setSpcSetting, wpCli } from './helpers/wp';
+import { publishedCaseIds, setSpcSetting, trash, untrash, wpCli } from './helpers/wp';
 import { NG_WORDS } from './helpers/page-checks';
 
 // 環境が遅いことがあるため、データを書き換えるテストは長めに待つ。
@@ -9,20 +9,6 @@ const ROW_LABELS = ['品目', '素材', 'シミ', '他店処理', '処置', '仕
 const FLOW_STEPS = ['写真で相談', '発送', '到着・検品', '正式なお見積り', 'ご承認・お支払い', '施工', '返送'];
 
 type JsonLdNode = Record<string, unknown> & { '@type'?: string | string[]; '@id'?: string };
-
-// 公開中の施工事例のID。
-function publishedCaseIds(): string[] {
-  const out = wpCli(['post', 'list', '--post_type=spc_case', '--post_status=publish', '--format=ids']);
-  return out.split(/\s+/).filter(Boolean);
-}
-
-// ゴミ箱に入れた投稿を、元の公開状態に戻す（WP 5.6 以降は既定で下書きに戻るため、フィルタで元の状態を使う）。
-function untrash(ids: string[]): void {
-  wpCli([
-    'eval',
-    `add_filter('wp_untrash_post_status','wp_untrash_post_set_previous_status',10,3);array_map('wp_untrash_post',array(${ids.join(',')}));`,
-  ]);
-}
 
 async function jsonLd(page: Page): Promise<JsonLdNode[]> {
   const scripts = page.locator('script[type="application/ld+json"]');
@@ -169,8 +155,7 @@ test.describe('トップLP後半（事例・職人・料金・流れ・注意・
     const ids = publishedCaseIds();
     expect(ids.length).toBeGreaterThan(0);
     try {
-      // WP-CLI の post delete は投稿・固定ページ以外をゴミ箱に入れられないため、wp_trash_post を使う。
-      wpCli(['eval', `array_map('wp_trash_post',array(${ids.join(',')}));`]);
+      trash(ids);
       await page.goto('/');
       await expect(page.locator('.spc-cases')).toHaveCount(0);
       await expect(page.locator('.spc-diagnosis')).toHaveCount(0);

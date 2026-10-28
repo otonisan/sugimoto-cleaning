@@ -234,6 +234,16 @@ function spc_theme_placeholder_copy(): array {
 			'file'      => 'page-price.php',
 			'confirmed' => false,
 		),
+		'cases.lead' => array(
+			'label'     => __( '施工事例の一覧「リード文」', 'spc' ),
+			'file'      => 'archive-spc_case.php',
+			'confirmed' => false,
+		),
+		'cases.empty' => array(
+			'label'     => __( '施工事例の一覧「0件のときの案内文」', 'spc' ),
+			'file'      => 'archive-spc_case.php',
+			'confirmed' => false,
+		),
 		'price.payment' => array(
 			'label'     => __( '料金・送料「お支払いとキャンセル」', 'spc' ),
 			'file'      => 'page-price.php',

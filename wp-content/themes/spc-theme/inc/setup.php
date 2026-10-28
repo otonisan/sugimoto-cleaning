@@ -48,3 +48,30 @@ add_filter( 'document_title_parts', 'spc_document_title_parts' );
  * アーカイブ見出しの「アーカイブ:」などの接頭辞を外す。
  */
 add_filter( 'get_the_archive_title_prefix', '__return_empty_string' );
+
+/**
+ * 施工事例の一覧は1ページ9件（SP 1列・2列・3列のどれでも割り切れる）。
+ */
+function spc_case_archive_query( WP_Query $query ): void {
+	if ( is_admin() || ! $query->is_main_query() || ! $query->is_post_type_archive( 'spc_case' ) ) {
+		return;
+	}
+	$query->set( 'posts_per_page', 9 );
+}
+add_action( 'pre_get_posts', 'spc_case_archive_query' );
+
+/**
+ * 施工事例の一覧が0件のときだけ noindex（follow は残す）。空のページを検索結果に出さないため。
+ *
+ * @param array<string,mixed> $robots robots の指定。
+ * @return array<string,mixed>
+ */
+function spc_case_archive_robots( array $robots ): array {
+	if ( is_post_type_archive( 'spc_case' ) && ! have_posts() ) {
+		$robots['noindex'] = true;
+		$robots['follow']  = true;
+		unset( $robots['index'] );
+	}
+	return $robots;
+}
+add_filter( 'wp_robots', 'spc_case_archive_robots' );

@@ -139,3 +139,99 @@
 .spc-subpage__photo {
 	margin-top: var(--space-32);
 }
+
+/* ---------- 施工事例の一覧：ページ送り（矢印なし。文字のリンクだけ） ---------- */
+.spc-cases--archive .pagination {
+	margin-top: var(--space-48);
+}
+
+.spc-cases--archive .nav-links {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: center;
+	gap: var(--space-8);
+}
+
+.spc-cases--archive .page-numbers {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: var(--tap-min);
+	min-height: var(--tap-min);
+	padding-inline: var(--space-16);
+	border: 1px solid var(--color-line);
+	border-radius: var(--radius-button);
+	background: var(--color-paper);
+	color: var(--color-sumi);
+	font-variant-numeric: tabular-nums;
+}
+
+.spc-cases--archive .page-numbers.current {
+	border-color: var(--color-sumi);
+	background: var(--color-sumi);
+	color: var(--color-paper);
+}
+
+.spc-cases--archive .page-numbers.dots {
+	border-color: transparent;
+	background: transparent;
+}
+
+/* ---------- 施工事例の詳細：診断票（白地）と前後の事例へのリンク ---------- */
+.spc-case-nav {
+	margin-top: var(--space-48);
+	border-top: 1px solid var(--color-line);
+}
+
+.spc-case-nav__list {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-8) var(--space-24);
+	padding: 0;
+	list-style: none;
+}
+
+.spc-case-nav__item a {
+	display: inline-flex;
+	align-items: center;
+	min-height: var(--tap-min);
+}
+
+/* SP は「一覧へ」を先頭に、前後を次の行へ。PC は 前 ／ 一覧 ／ 次 の順 */
+.spc-case-nav__item--archive {
+	order: -1;
+	flex-basis: 100%;
+}
+
+@media (min-width: 768px) {
+	.spc-case-nav__item--archive {
+		order: 0;
+		flex-basis: auto;
+	}
+}
+
+/* 診断票の幅広レイアウト（詳細）。1024px 以上は写真を左、項目を右（DESIGN.md §4）。それ未満は通常の診断票と同じ */
+@media (min-width: 1024px) {
+	.spc-diagnosis--wide {
+		display: grid;
+		grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+		grid-template-rows: auto 1fr;
+	}
+
+	.spc-diagnosis--wide .spc-diagnosis__head {
+		grid-column: 1 / -1;
+	}
+
+	.spc-diagnosis--wide .spc-diagnosis__photos {
+		border-right: 1px solid var(--color-line);
+		border-bottom: 0;
+	}
+
+	.spc-diagnosis--wide .spc-diagnosis__rows {
+		align-self: start;
+		padding: var(--space-16) var(--space-32) var(--space-32);
+	}
+}
