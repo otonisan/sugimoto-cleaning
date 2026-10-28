@@ -5,7 +5,10 @@
  * JSが無いときは、2枚を縦に並べて両方見せる。
  * 掲載許諾ID（spc_permission_id）は内部の記録用のため、ここでは読まない。
  *
- * @var array{post_id:int} $args
+ * 引数：post_id、heading（'h2'|'h3'|'p'、既定 'h3'）、link（No.を詳細ページへのリンクにする、既定 false）、
+ * wide（幅広の配置にする spc-diagnosis--wide、既定 false）。
+ *
+ * @var array{post_id?:int,heading?:string,link?:bool,wide?:bool} $args
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -14,6 +17,10 @@ $spc_post_id = isset( $args['post_id'] ) ? (int) $args['post_id'] : (int) get_th
 if ( $spc_post_id <= 0 ) {
 	return;
 }
+
+$spc_heading = isset( $args['heading'] ) && in_array( $args['heading'], array( 'h2', 'h3', 'p' ), true ) ? $args['heading'] : 'h3';
+$spc_link    = ! empty( $args['link'] );
+$spc_wide    = ! empty( $args['wide'] );
 
 $spc_meta = static function ( string $key ) use ( $spc_post_id ): string {
 	return trim( (string) get_post_meta( $spc_post_id, $key, true ) );
@@ -53,15 +60,21 @@ $spc_panes = array(
 // 代替テキストが未入力のときは、品目とシミから具体的に作る（DESIGN.md §5）。
 $spc_subject = '' !== $spc_item ? $spc_item . ( '' !== $spc_stain ? 'の' . $spc_stain : '' ) : $spc_title;
 ?>
-<article class="spc-diagnosis">
+<article class="spc-diagnosis<?php echo $spc_wide ? ' spc-diagnosis--wide' : ''; ?>">
 	<header class="spc-diagnosis__head">
-		<h3 class="spc-diagnosis__no">
+		<<?php echo tag_escape( $spc_heading ); ?> class="spc-diagnosis__no">
+			<?php if ( $spc_link ) : ?>
+				<a href="<?php echo esc_url( get_permalink( $spc_post_id ) ); ?>">
+			<?php endif; ?>
 			<?php if ( '' !== $spc_case_no ) : ?>
 				No. <span class="spc-num"><?php echo esc_html( $spc_case_no ); ?></span><span class="screen-reader-text"><?php echo esc_html( '　' . $spc_title ); ?></span>
 			<?php else : ?>
 				<?php echo esc_html( $spc_title ); ?>
 			<?php endif; ?>
-		</h3>
+			<?php if ( $spc_link ) : ?>
+				</a>
+			<?php endif; ?>
+		</<?php echo tag_escape( $spc_heading ); ?>>
 		<?php spc_placeholder_badge( $spc_post_id ); ?>
 	</header>
 

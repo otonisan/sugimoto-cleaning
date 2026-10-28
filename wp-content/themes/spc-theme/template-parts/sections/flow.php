@@ -1,9 +1,24 @@
 <?php
 /**
- * LP 8：全国宅配の流れ（灰白地）。手順なので番号を付ける（DESIGN.md §1-2）。
+ * 全国宅配の流れ（既定は灰白地）。手順なので番号を付ける（DESIGN.md §1-2）。
+ * LP 8 と下層ページで共用する。引数を省略するとLPと同じ出力になる。
+ *
+ * @var array{tone?:string,id?:string,heading?:string,heading_id?:string} $args
  */
 
 defined( 'ABSPATH' ) || exit;
+
+$spc_args = wp_parse_args(
+	isset( $args ) && is_array( $args ) ? $args : array(),
+	array(
+		'tone'       => 'mist',
+		'id'         => '',
+		'heading'    => __( '全国宅配の流れ', 'spc' ),
+		'heading_id' => 'spc-flow-title',
+	)
+);
+$spc_section_id = '' !== (string) $spc_args['id'] ? ' id="' . esc_attr( (string) $spc_args['id'] ) . '"' : '';
+$spc_tone_class = 'mist' === $spc_args['tone'] ? ' spc-section--mist' : '';
 
 // TODO(仮): 文言は依頼元確認後に確定（各手順の説明文）
 $spc_flow = array(
@@ -16,10 +31,10 @@ $spc_flow = array(
 	array( __( '返送', 'spc' ), __( '仕上がりを確認し、梱包してお返しします。', 'spc' ) ),
 );
 ?>
-<section class="spc-section spc-section--mist spc-flow" aria-labelledby="spc-flow-title">
+<section<?php echo $spc_section_id; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- 上でエスケープ済み ?> class="spc-section<?php echo esc_attr( $spc_tone_class ); ?> spc-flow" aria-labelledby="<?php echo esc_attr( (string) $spc_args['heading_id'] ); ?>">
 	<div class="spc-container spc-split">
 		<div class="spc-split__head">
-			<h2 id="spc-flow-title" class="spc-flow__title"><?php esc_html_e( '全国宅配の流れ', 'spc' ); ?></h2>
+			<h2 id="<?php echo esc_attr( (string) $spc_args['heading_id'] ); ?>" class="spc-flow__title"><?php echo esc_html( (string) $spc_args['heading'] ); ?></h2>
 			<?php // TODO(仮): 文言は依頼元確認後に確定 ?>
 			<p class="spc-split__lead"><?php esc_html_e( '正式なお見積りにご承認いただくまで、施工は始めません。', 'spc' ); ?></p>
 		</div>

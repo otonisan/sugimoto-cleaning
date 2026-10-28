@@ -182,6 +182,21 @@ function spc_price_label( int $post_id ): string {
 }
 
 /**
+ * 料金の仕組み（写真で概算 → 現物を拝見して正式見積 → ご承認後に施工）の3段。
+ * LP の料金セクションと料金ページで同じものを使う。
+ *
+ * @return array<int,array{0:string,1:string}> array( 見出し, 説明文 ) の配列。
+ */
+function spc_price_steps(): array {
+	// TODO(仮): 文言は依頼元確認後に確定（3段階の説明文）
+	return array(
+		array( __( '写真で概算', 'spc' ), __( '写真から分かる範囲で、料金の目安をお伝えします。', 'spc' ) ),
+		array( __( '現物を拝見して正式見積', 'spc' ), __( 'お送りいただいた衣類を職人が確認し、正式な金額をお伝えします。', 'spc' ) ),
+		array( __( 'ご承認後に施工', 'spc' ), __( '金額と仕上がりの見込みにご納得いただいてから、施工を始めます。', 'spc' ) ),
+	);
+}
+
+/**
  * spc-core のクエリ引数（本番では仮データを除外）で WP_Query を作る。
  * 0件、または spc-core が無いときは null を返す（呼び出し側はセクションごと出さない）。
  * ループのあとは wp_reset_postdata() を呼ぶこと。

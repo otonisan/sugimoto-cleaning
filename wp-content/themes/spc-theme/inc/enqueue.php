@@ -24,7 +24,7 @@ function spc_enqueue_assets(): void {
 	wp_enqueue_style( 'spc-fonts', SPC_FONTS_URL, array(), null ); // phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion
 
 	$deps = array( 'spc-fonts' );
-	foreach ( array( 'tokens', 'base', 'components' ) as $name ) {
+	foreach ( array( 'tokens', 'base', 'components', 'sections' ) as $name ) {
 		$rel = 'assets/css/' . $name . '.css';
 		wp_enqueue_style( 'spc-' . $name, get_theme_file_uri( $rel ), $deps, spc_asset_version( $rel ) );
 		$deps = array( 'spc-' . $name );
@@ -48,20 +48,21 @@ function spc_enqueue_assets(): void {
 		$prev = array( 'spc-' . $name );
 	}
 
-	// LP の部品はトップだけで読み込む。
+	// 施工事例の施工前／施工後の切り替え（全ページ共通。JSが無くても両方の写真が見える）。
+	wp_enqueue_script(
+		'spc-before-after',
+		get_theme_file_uri( 'assets/js/before-after.js' ),
+		array(),
+		spc_asset_version( 'assets/js/before-after.js' ),
+		array(
+			'in_footer' => true,
+			'strategy'  => 'defer',
+		)
+	);
+
+	// LP 固有の部品はトップだけで読み込む（共有セクションは sections.css）。
 	if ( is_front_page() ) {
 		wp_enqueue_style( 'spc-lp', get_theme_file_uri( 'assets/css/lp.css' ), array( 'spc-style' ), spc_asset_version( 'assets/css/lp.css' ) );
-		// 施工事例の施工前／施工後の切り替え（JSが無くても両方の写真が見える）。
-		wp_enqueue_script(
-			'spc-before-after',
-			get_theme_file_uri( 'assets/js/before-after.js' ),
-			array(),
-			spc_asset_version( 'assets/js/before-after.js' ),
-			array(
-				'in_footer' => true,
-				'strategy'  => 'defer',
-			)
-		);
 	}
 }
 add_action( 'wp_enqueue_scripts', 'spc_enqueue_assets' );
