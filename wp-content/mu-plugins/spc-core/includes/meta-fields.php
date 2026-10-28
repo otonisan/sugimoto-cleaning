@@ -101,6 +101,11 @@ function spc_field_definitions( string $post_type ): array {
 					'type'        => 'int',
 					'description' => __( '数字だけを入力します（例：15000）。0のときはサイトに『お見積り』と表示されます。', 'spc' ),
 				),
+				'spc_display_text' => array(
+					'label'       => __( '表示用テキスト（任意）', 'spc' ),
+					'type'        => 'text',
+					'description' => __( '金額の代わりに表示する文字です（例：無料、実費）。入力すると、目安金額より優先して表示されます。空欄なら目安金額を表示します。', 'spc' ),
+				),
 				'spc_from'        => array(
 					'label'       => __( '「〜」を付ける', 'spc' ),
 					'type'        => 'bool',

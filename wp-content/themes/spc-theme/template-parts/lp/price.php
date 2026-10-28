@@ -78,13 +78,11 @@ $spc_price_steps = array(
 					<tbody>
 						<?php foreach ( $spc_table['rows'] as $spc_row ) : ?>
 							<?php
-							$spc_amount = (int) get_post_meta( $spc_row->ID, 'spc_amount', true );
-							$spc_from   = '1' === (string) get_post_meta( $spc_row->ID, 'spc_from', true );
-							$spc_note   = trim( (string) get_post_meta( $spc_row->ID, 'spc_note', true ) );
+							$spc_note = trim( (string) get_post_meta( $spc_row->ID, 'spc_note', true ) );
 							?>
 							<tr>
 								<th scope="row" class="spc-price__name"><?php echo esc_html( wp_strip_all_tags( get_the_title( $spc_row ) ) ); ?></th>
-								<td class="spc-price__amount"><span class="spc-price__value"><?php echo esc_html( spc_format_price( $spc_amount, $spc_from ) ); ?></span><?php spc_placeholder_badge( $spc_row->ID ); ?></td>
+								<td class="spc-price__amount"><span class="spc-price__value"><?php echo esc_html( spc_price_label( $spc_row->ID ) ); ?></span><?php spc_placeholder_badge( $spc_row->ID ); ?></td>
 								<td class="spc-price__note"><?php echo esc_html( $spc_note ); ?></td>
 							</tr>
 						<?php endforeach; ?>

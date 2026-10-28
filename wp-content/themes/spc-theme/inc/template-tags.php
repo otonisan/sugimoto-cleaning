@@ -169,6 +169,19 @@ function spc_format_price( int $amount, bool $from ): string {
 }
 
 /**
+ * 料金の表示文字。「表示用テキスト」があればそれを、なければ目安金額を整形して返す。
+ *
+ * @param int $post_id 料金（spc_price）の投稿ID。
+ */
+function spc_price_label( int $post_id ): string {
+	$text = trim( (string) get_post_meta( $post_id, 'spc_display_text', true ) );
+	if ( '' !== $text ) {
+		return $text;
+	}
+	return spc_format_price( (int) get_post_meta( $post_id, 'spc_amount', true ), '1' === (string) get_post_meta( $post_id, 'spc_from', true ) );
+}
+
+/**
  * spc-core のクエリ引数（本番では仮データを除外）で WP_Query を作る。
  * 0件、または spc-core が無いときは null を返す（呼び出し側はセクションごと出さない）。
  * ループのあとは wp_reset_postdata() を呼ぶこと。

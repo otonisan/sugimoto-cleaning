@@ -101,4 +101,19 @@ class Test_PostTypes extends WP_UnitTestCase {
 			$this->assertFalse( use_block_editor_for_post_type( $type ), $type );
 		}
 	}
+
+	public function test_price_column_shows_display_text_when_set() {
+		$text  = self::factory()->post->create( array( 'post_type' => 'spc_price' ) );
+		$money = self::factory()->post->create( array( 'post_type' => 'spc_price' ) );
+		$none  = self::factory()->post->create( array( 'post_type' => 'spc_price' ) );
+		update_post_meta( $text, 'spc_amount', '0' );
+		update_post_meta( $text, 'spc_display_text', '無料' );
+		update_post_meta( $money, 'spc_amount', '15000' );
+
+		foreach ( array( $text => '無料', $money => '15,000円', $none => 'お見積り' ) as $id => $expected ) {
+			ob_start();
+			do_action( 'manage_spc_price_posts_custom_column', 'spc_amount', $id );
+			$this->assertSame( $expected, ob_get_clean() );
+		}
+	}
 }

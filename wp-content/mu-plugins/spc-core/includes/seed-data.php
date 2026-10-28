@@ -72,8 +72,8 @@ function spc_seed_definitions(): array {
 		array( 'price-down', '高級ダウン', 'down', 15000, '1', '状態により変動します（仮）', 3 ),
 		array( 'price-coat', 'コート・ジャケット', 'coat', 12000, '1', '状態により変動します（仮）', 4 ),
 		array( 'price-shipping', '往復送料', 'shipping', 2000, '1', '地域により異なります（仮）', 5 ),
-		array( 'price-diagnosis', '診断料', 'shipping', 0, '0', '無料の予定（仮）', 6 ),
-		array( 'price-return', '未承認時の返送料', 'shipping', 0, '0', '実費の予定（仮）', 7 ),
+		array( 'price-diagnosis', '診断料', 'shipping', 0, '0', '金額は確定後に差し替えます（仮）', 6, '無料（仮）' ),
+		array( 'price-return', '未承認時の返送料', 'shipping', 0, '0', '金額は確定後に差し替えます（仮）', 7, '実費（仮）' ),
 	);
 	foreach ( $prices as $p ) {
 		$defs[] = array(
@@ -86,7 +86,7 @@ function spc_seed_definitions(): array {
 				'spc_amount'      => (string) $p[3],
 				'spc_from'        => $p[4],
 				'spc_note'        => $p[5],
-			),
+			) + ( isset( $p[7] ) ? array( 'spc_display_text' => $p[7] ) : array() ),
 		);
 	}
 

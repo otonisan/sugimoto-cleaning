@@ -213,6 +213,22 @@ class Test_MetaFields extends WP_UnitTestCase {
 		$this->assertSame( '', get_post_meta( $rev, 'spc_item', true ) );
 	}
 
+	public function test_price_display_text_field_follows_amount() {
+		$defs = spc_field_definitions( 'spc_price' );
+		$keys = array_keys( $defs );
+		$this->assertSame( 'spc_display_text', $keys[ array_search( 'spc_amount', $keys, true ) + 1 ] );
+		$this->assertSame( '表示用テキスト（任意）', $defs['spc_display_text']['label'] );
+		$this->assertSame( 'text', $defs['spc_display_text']['type'] );
+		$this->assertMatchesRegularExpression( '/\p{Han}|\p{Hiragana}/u', $defs['spc_display_text']['description'] );
+	}
+
+	public function test_price_display_text_is_trimmed_and_stripped() {
+		$id = $this->post( 'spc_price' );
+		update_post_meta( $id, 'spc_display_text', "  <b>無料</b>
+ " );
+		$this->assertSame( '無料', get_post_meta( $id, 'spc_display_text', true ) );
+	}
+
 	public function test_production_classic_save_with_placeholder_unchecked_stays_published() {
 		add_filter( 'spc_is_production', '__return_true' );
 		wp_set_current_user( self::factory()->user->create( array( 'role' => 'administrator' ) ) );

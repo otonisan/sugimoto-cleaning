@@ -188,8 +188,13 @@ function spc_list_column_content( string $column, int $post_id ): void {
 			echo esc_html( $defs[ $key ]['options'][ $val ] ?? '' );
 			break;
 		case 'spc_amount':
+			$text   = trim( (string) get_post_meta( $post_id, 'spc_display_text', true ) );
 			$amount = (int) get_post_meta( $post_id, 'spc_amount', true );
-			echo esc_html( $amount > 0 ? number_format_i18n( $amount ) . '円' : __( 'お見積り', 'spc' ) );
+			if ( '' !== $text ) {
+				echo esc_html( $text );
+			} else {
+				echo esc_html( $amount > 0 ? number_format_i18n( $amount ) . '円' : __( 'お見積り', 'spc' ) );
+			}
 			break;
 		case 'spc_top':
 			echo '1' === get_post_meta( $post_id, 'spc_show_on_top', true ) ? esc_html__( '表示', 'spc' ) : '';

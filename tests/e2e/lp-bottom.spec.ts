@@ -241,9 +241,10 @@ test.describe('トップLP後半（事例・職人・料金・流れ・注意・
     await expect(cell).toHaveCSS('border-left-width', '0px');
     await expect(cell).toHaveCSS('border-right-width', '0px');
 
-    // 送料・手数料の表：金額0は「お見積り」。
+    // 送料・手数料の表：診断料は表示用テキスト「無料（仮）」が金額より優先される。
     const diagnosis = section.locator('tr').filter({ hasText: '診断料' });
-    await expect(diagnosis.locator('.spc-price__amount')).toContainText('お見積り');
+    await expect(diagnosis.locator('.spc-price__amount')).toContainText('無料（仮）');
+    await expect(diagnosis.locator('.spc-price__amount')).not.toContainText('お見積り');
     await expect(section.locator('table')).toHaveCount(2);
 
     await expect(section).toContainText('表示は目安です。素材や状態によって変わります。正式な金額は現物を拝見してからお伝えします。');
@@ -330,6 +331,36 @@ test.describe('トップLP後半（事例・職人・料金・流れ・注意・
       await expect(qr).toBeHidden();
     } finally {
       restore();
+    }
+  });
+
+  test('料金の表示用テキスト：入力があれば金額より優先、なければ金額（「〜」付き）を表示する', async ({ page }) => {
+    const ids: string[] = [];
+    try {
+      for (const [title, amount, from, text] of [
+        ['E2E表示テキスト', '0', '', '無料'],
+        ['E2E金額表示', '15000', '1', ''],
+      ]) {
+        const id = wpCli(['post', 'create', '--post_type=spc_price', '--post_status=publish', `--post_title=${title}`, '--porcelain']);
+        ids.push(id);
+        for (const [key, value] of [
+          ['spc_price_group', 'shipping'],
+          ['spc_amount', amount],
+          ['spc_from', from],
+          ['spc_display_text', text],
+        ]) {
+          if (value !== '') wpCli(['post', 'meta', 'update', id, key, value]);
+        }
+      }
+      await page.goto('/');
+      const section = page.locator('section.spc-price');
+      const free = section.locator('tr').filter({ hasText: 'E2E表示テキスト' }).locator('.spc-price__amount');
+      await expect(free).toContainText('無料');
+      await expect(free).not.toContainText('お見積り');
+      const money = section.locator('tr').filter({ hasText: 'E2E金額表示' }).locator('.spc-price__amount');
+      await expect(money).toContainText('15,000円〜');
+    } finally {
+      for (const id of ids) wpCli(['post', 'delete', id, '--force']);
     }
   });
 
