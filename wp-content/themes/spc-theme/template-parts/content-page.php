@@ -19,7 +19,7 @@ defined( 'ABSPATH' ) || exit;
 	?>
 	<div class="spc-page__body">
 		<div class="spc-container">
-			<div class="spc-prose">
+			<div class="spc-prose spc-table-content">
 				<?php the_content(); ?>
 			</div>
 		</div>

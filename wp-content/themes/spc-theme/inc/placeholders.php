@@ -254,6 +254,11 @@ function spc_theme_placeholder_copy(): array {
 			'file'      => 'page-about.php',
 			'confirmed' => false,
 		),
+		'legal.lead' => array(
+			'label'     => __( '規約・法定表示「リード文」', 'spc' ),
+			'file'      => 'page-legal.php',
+			'confirmed' => false,
+		),
 		'guide.lead' => array(
 			'label'     => __( 'ご利用の流れ・よくある質問「リード文」', 'spc' ),
 			'file'      => 'page-guide.php',
