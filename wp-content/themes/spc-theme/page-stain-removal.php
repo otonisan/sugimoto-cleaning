@@ -167,6 +167,7 @@ while ( have_posts() ) :
 			null,
 			array(
 				'tone'       => 'paper',
+				'id'         => 'faq',
 				'heading_id' => 'spc-stain-faq-title',
 				'query'      => $spc_stain_faqs,
 			)

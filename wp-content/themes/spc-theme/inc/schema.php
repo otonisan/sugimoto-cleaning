@@ -137,6 +137,7 @@ function spc_schema_graph(): array {
 	$page_type = spc_page_type();
 	$slug      = is_page() ? (string) get_post_field( 'post_name', get_queried_object_id() ) : '';
 	if ( 'service' === $page_type && 'stain-removal' === $slug ) {
+		// TODO(仮): 文言は依頼元確認後に確定（Service の説明文） [copy:stain.schema]
 		$service               = spc_schema_service( '特殊シミ抜き', '他店で落ちなかったシミ、時間がたったシミなどのご相談を、写真で承ります。' );
 		$service['areaServed'] = 'JP';
 		$graph[]               = $service;

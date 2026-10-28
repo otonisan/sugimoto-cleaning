@@ -174,6 +174,11 @@ function spc_theme_placeholder_copy(): array {
 			'file'      => 'page-stain-removal.php',
 			'confirmed' => false,
 		),
+		'stain.schema'     => array(
+			'label'     => __( '特殊シミ抜き「構造化データの説明文」', 'spc' ),
+			'file'      => 'inc/schema.php',
+			'confirmed' => false,
+		),
 		'stain.yellowing'  => array(
 			'label'     => __( '特殊シミ抜き「黄ばみ・汗汚れ」', 'spc' ),
 			'file'      => 'page-stain-removal.php',
