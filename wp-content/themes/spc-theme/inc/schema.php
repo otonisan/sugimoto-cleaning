@@ -181,6 +181,13 @@ function spc_schema_graph(): array {
 			}
 		}
 	}
+	if ( 'guide' === $page_type ) {
+		// ページ上のFAQ（全件）と同じ質問・回答。
+		$guide_faqs = spc_faq_query();
+		if ( $guide_faqs ) {
+			$graph[] = spc_schema_faq_page( $guide_faqs, get_permalink( get_queried_object_id() ) . '#faq' );
+		}
+	}
 	if ( 'about' === $page_type ) {
 		// 職人ごとの Person（ページの職人一覧と同じクエリ）。住所・電話は書かない。
 		$staff = spc_lp_query( 'spc_staff', array( 'posts_per_page' => -1 ) );

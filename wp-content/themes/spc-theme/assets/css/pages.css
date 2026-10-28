@@ -282,3 +282,22 @@
 		gap: var(--gutter);
 	}
 }
+
+/* ---------- ご利用の流れ・よくある質問（/guide/）：FAQ を分類ごとに並べる ---------- */
+.spc-faq__list:has(.spc-faq__group) {
+	border-bottom: 0;
+}
+
+.spc-faq__group {
+	border-bottom: 1px solid var(--color-line);
+}
+
+.spc-faq__group + .spc-faq__group {
+	margin-top: var(--space-48);
+}
+
+.spc-faq__group-title {
+	margin-bottom: var(--space-16);
+	font-size: var(--text-h3);
+	line-height: var(--leading-h3, 1.5);
+}

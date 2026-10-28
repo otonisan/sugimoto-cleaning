@@ -254,6 +254,21 @@ function spc_theme_placeholder_copy(): array {
 			'file'      => 'page-about.php',
 			'confirmed' => false,
 		),
+		'guide.lead' => array(
+			'label'     => __( 'ご利用の流れ・よくある質問「リード文」', 'spc' ),
+			'file'      => 'page-guide.php',
+			'confirmed' => false,
+		),
+		'guide.photos' => array(
+			'label'     => __( 'ご利用の流れ・よくある質問「写真相談で送っていただくもの」', 'spc' ),
+			'file'      => 'page-guide.php',
+			'confirmed' => false,
+		),
+		'guide.packing' => array(
+			'label'     => __( 'ご利用の流れ・よくある質問「送り方・梱包」', 'spc' ),
+			'file'      => 'page-guide.php',
+			'confirmed' => false,
+		),
 		'price.lead' => array(
 			'label'     => __( '料金・送料「リード文」', 'spc' ),
 			'file'      => 'page-price.php',

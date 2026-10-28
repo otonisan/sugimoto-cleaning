@@ -244,6 +244,41 @@ function spc_faq_query( array $groups = array(), bool $top_only = false, int $li
 }
 
 /**
+ * FAQ の分類（キー => 表示名）。順番は spc-core の選択肢の順。
+ *
+ * @return array<string,string>
+ */
+function spc_faq_group_labels(): array {
+	$defs    = function_exists( 'spc_field_definitions' ) ? spc_field_definitions( 'spc_faq' ) : array();
+	$options = $defs['spc_faq_group']['options'] ?? array();
+	return is_array( $options ) ? array_map( 'strval', $options ) : array();
+}
+
+/**
+ * FAQ を分類ごとにまとめる。キーは分類の選択肢の順、FAQ が無い分類は含めない。
+ * 分類が空・選択肢にないものは「その他」（other）に入れる。同じ分類の中は渡された順のまま。
+ *
+ * @param WP_Post[] $posts FAQ の投稿。
+ * @return array<string,WP_Post[]>
+ */
+function spc_group_faqs( array $posts ): array {
+	$keys     = array_keys( spc_faq_group_labels() );
+	$fallback = 'other';
+	if ( ! in_array( $fallback, $keys, true ) ) {
+		$keys[] = $fallback;
+	}
+	$buckets = array_fill_keys( $keys, array() );
+	foreach ( $posts as $post ) {
+		$group = (string) get_post_meta( $post->ID, 'spc_faq_group', true );
+		if ( ! isset( $buckets[ $group ] ) ) {
+			$group = $fallback;
+		}
+		$buckets[ $group ][] = $post;
+	}
+	return array_filter( $buckets );
+}
+
+/**
  * トップのFAQ（「トップに表示」付き・最大5件）。FAQセクションと構造化データで同じものを使う。
  */
 function spc_top_faq_query(): ?WP_Query {

@@ -217,4 +217,38 @@ class Test_ThemeSubpages extends WP_UnitTestCase {
 		);
 		$this->assertSame( array(), array_filter( spc_placeholder_report(), fn( $i ) => 'theme_copy' === $i['type'] ) );
 	}
+
+	private function make_faq( string $title, string $group ): WP_Post {
+		$id = self::factory()->post->create(
+			array(
+				'post_type'   => 'spc_faq',
+				'post_status' => 'publish',
+				'post_title'  => $title,
+			)
+		);
+		update_post_meta( $id, 'spc_faq_group', $group );
+		return get_post( $id );
+	}
+
+	public function test_group_faqs_follows_option_order_and_skips_empty_groups() {
+		$down  = $this->make_faq( 'D', 'down' );
+		$ship  = $this->make_faq( 'S', 'shipping' );
+		$other = $this->make_faq( 'O', 'other' );
+		$ship2 = $this->make_faq( 'S2', 'shipping' );
+
+		$grouped = spc_group_faqs( array( $down, $ship, $other, $ship2 ) );
+		$this->assertSame( array( 'shipping', 'down', 'other' ), array_keys( $grouped ) );
+		$this->assertSame( array( $ship->ID, $ship2->ID ), wp_list_pluck( $grouped['shipping'], 'ID' ) );
+	}
+
+	public function test_group_faqs_puts_empty_and_unknown_groups_under_other() {
+		$empty   = $this->make_faq( 'E', '' );
+		$unknown = $this->make_faq( 'U', 'no-such-group' );
+		$price   = $this->make_faq( 'P', 'price' );
+
+		$grouped = spc_group_faqs( array( $empty, $unknown, $price ) );
+		$this->assertSame( array( 'price', 'other' ), array_keys( $grouped ) );
+		$this->assertSame( array( $empty->ID, $unknown->ID ), wp_list_pluck( $grouped['other'], 'ID' ) );
+		$this->assertSame( array(), spc_group_faqs( array() ) );
+	}
 }
