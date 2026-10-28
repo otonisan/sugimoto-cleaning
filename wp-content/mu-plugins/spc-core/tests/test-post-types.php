@@ -95,4 +95,10 @@ class Test_PostTypes extends WP_UnitTestCase {
 		do_action( 'manage_page_posts_custom_column', 'spc_placeholder', $flagged );
 		$this->assertSame( '仮', ob_get_clean() );
 	}
+
+	public function test_pages_and_custom_types_use_the_classic_editor() {
+		foreach ( array( 'page', 'spc_case', 'spc_price', 'spc_faq', 'spc_staff' ) as $type ) {
+			$this->assertFalse( use_block_editor_for_post_type( $type ), $type );
+		}
+	}
 }

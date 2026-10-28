@@ -85,10 +85,12 @@ function spc_post_type_labels( string $name, string $add_new ): array {
 }
 
 /**
- * 4つとも旧エディタ（ブロックエディタ不使用）。
+ * 4つの投稿タイプと固定ページは旧エディタ（ブロックエディタ不使用）。
+ * 「公開前チェック」の入力欄を持つ種類（spc_placeholder_post_types）と同じ集合にして、判断の元を1つにする。
+ * 旧エディタなら入力欄が save_post（公開ガードより前）に保存され、解除と公開を1回の操作で行える。
  */
 function spc_disable_block_editor( $use, $post_type ) {
-	return in_array( $post_type, spc_post_types(), true ) ? false : $use;
+	return in_array( $post_type, spc_placeholder_post_types(), true ) ? false : $use;
 }
 add_filter( 'use_block_editor_for_post_type', 'spc_disable_block_editor', 10, 2 );
 

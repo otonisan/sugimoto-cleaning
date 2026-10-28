@@ -212,4 +212,35 @@ class Test_MetaFields extends WP_UnitTestCase {
 		$this->submit( $rev, array( 'spc_item' => 'x' ) );
 		$this->assertSame( '', get_post_meta( $rev, 'spc_item', true ) );
 	}
+
+	public function test_production_classic_save_with_placeholder_unchecked_stays_published() {
+		add_filter( 'spc_is_production', '__return_true' );
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'administrator' ) ) );
+		$id = self::factory()->post->create( array( 'post_type' => 'page', 'post_status' => 'publish' ) );
+		update_post_meta( $id, '_spc_is_placeholder', '1' ); // 本番では下書きに戻る
+		$this->assertSame( 'draft', get_post_status( $id ) );
+
+		// クラシックの編集フォームで、チェックを外して「公開」を押した送信。
+		$_POST = array( 'spc_meta_nonce' => wp_create_nonce( 'spc_save_meta' ) );
+		wp_update_post( array( 'ID' => $id, 'post_status' => 'publish' ) );
+		$this->assertSame( 'publish', get_post_status( $id ) );
+		$this->assertSame( '', get_post_meta( $id, '_spc_is_placeholder', true ) );
+		remove_all_filters( 'spc_is_production' );
+	}
+
+	public function test_production_classic_save_with_placeholder_checked_reverts_to_draft() {
+		add_filter( 'spc_is_production', '__return_true' );
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'administrator' ) ) );
+		$id = self::factory()->post->create( array( 'post_type' => 'page', 'post_status' => 'draft' ) );
+		update_post_meta( $id, '_spc_is_placeholder', '1' );
+
+		$_POST = array(
+			'spc_meta'       => array( '_spc_is_placeholder' => '1' ),
+			'spc_meta_nonce' => wp_create_nonce( 'spc_save_meta' ),
+		);
+		wp_update_post( array( 'ID' => $id, 'post_status' => 'publish' ) );
+		$this->assertSame( 'draft', get_post_status( $id ) );
+		$this->assertSame( '1', get_post_meta( $id, '_spc_is_placeholder', true ) );
+		remove_all_filters( 'spc_is_production' );
+	}
 }
